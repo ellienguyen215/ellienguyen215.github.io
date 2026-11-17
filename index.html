@@ -15,6 +15,7 @@
     font: 14px/1.6 ui-monospace, Menlo, Consolas, "Courier New", monospace; }
   body { background: radial-gradient(ellipse at 50% -10%, #fbf4e9 0%, #f5ecde 45%, var(--bg) 100%) fixed; }
   #sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  #top { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
   main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 64px 22px 40px; }
   header { text-align: center; margin-bottom: 46px; }
   pre.title {
@@ -104,12 +105,49 @@
   .wall .entry .w { font-size: 17px; color: var(--dim); margin-top: 6px; text-align: right; }
   .wall .empty { grid-column: 1 / -1; text-align: center; color: var(--dim); font-size: 20px; }
 
+  /* ---------- hobbies sakura popup ---------- */
+  .hobby { position: fixed; z-index: 20; width: 330px; height: 330px; pointer-events: none; transform-origin: center; }
+  .hobby[hidden] { display: none; }
+  .hobby.show { animation: bloomIn .55s cubic-bezier(.3, 1.5, .5, 1) both; }
+  .hobby.hide { animation: bloomOut .25s ease-in both; }
+  .hobby svg.petals { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 8px 18px rgba(160, 70, 100, .25)); animation: spinSlow 30s linear infinite; }
+  .hobby .txt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font: 700 19px/1.3 'Gaegu', ui-monospace, monospace; color: #6b3247; text-align: center; pointer-events: auto; }
+  .hobby .txt .h { font-size: 21px; color: #c9567f; margin-bottom: 2px; }
+  .hobby .x { position: absolute; top: 46px; right: 52px; pointer-events: auto; border: 0; background: rgba(255, 255, 255, .7);
+    width: 26px; height: 26px; border-radius: 50%; color: #c9567f; font-size: 13px; cursor: pointer; }
+  @keyframes bloomIn { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes bloomOut { to { transform: scale(.2) rotate(60deg); opacity: 0; } }
+  @keyframes spinSlow { to { transform: rotate(360deg); } }
+  .star { cursor: pointer; user-select: none; display: inline-block; transition: transform .2s; }
+  .star.tap { transform: scale(1.5) rotate(40deg); }
+  .secret { position: fixed; left: 50%; top: 22px; transform: translate(-50%, -20px); opacity: 0; z-index: 30; pointer-events: none;
+    font: 700 22px 'Gaegu', ui-monospace, monospace; color: #fff; background: #d8638b; padding: 4px 16px 6px; border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(160, 70, 100, .3); transition: opacity .4s, transform .4s; }
+  .secret.show { opacity: 1; transform: translate(-50%, 0); }
+
   footer { text-align: center; color: var(--dim); margin-top: 54px; font-size: 12px; }
   footer a { color: var(--dim); }
 </style>
 </head>
 <body>
 <canvas id="sky"></canvas>
+<canvas id="top"></canvas>
+<div id="hobby" class="hobby" role="dialog" aria-label="my hobbies" hidden>
+  <svg class="petals" viewBox="-130 -130 260 260" aria-hidden="true">
+    <g id="petalShapes"></g>
+    <circle r="70" fill="#fff4f8" stroke="#f6c4d6" stroke-width="2"/>
+    <g fill="#e8b33d"><circle cx="61.4" cy="44.8" r="4"/><circle cx="-23.6" cy="72.2" r="4"/><circle cx="-76.0" cy="-0.1" r="4"/><circle cx="-23.4" cy="-72.3" r="4"/><circle cx="61.6" cy="-44.6" r="4"/></g>
+  </svg>
+  <button class="x" aria-label="close">✕</button>
+  <div class="txt">
+    <div class="h">✿ my hobbies ✿</div>
+    <div>💻 vibe coding</div>
+    <div>🎨 drawing</div>
+    <div>🥋 taekwondo</div>
+  </div>
+</div>
+<div id="secret" class="secret"></div>
 <main>
   <header>
     <pre class="title" aria-label="Welcome to my corner">__      __   _                    _
@@ -124,7 +162,7 @@
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg>
       @ellien_2012
     </a>
-    <div class="tag">little living scenes made entirely of <b>text characters</b> ✦</div>
+    <div class="tag">little living scenes made entirely of <b>text characters</b> <span id="star" class="star">✦</span></div>
   </header>
 
   <section class="grid">
@@ -418,6 +456,7 @@
   }
   // some new petals start from the branch blossoms instead of the top of the screen
   const _makePetal = makePetal;
+  const makePetalRaw = () => _makePetal(false);
   makePetal = function (top) {
     const p = _makePetal(top);
     if (top && blossomSpots.length && scrollY < 200 && Math.random() < 0.45) {
@@ -430,7 +469,10 @@
   // ---------- click to bloom ----------
   const blooms = [];
   addEventListener('click', e => {
+    if (e.target.closest('.hobby')) return;
+    if (!hobby.hidden) { closeHobby(); return; }
     if (e.target.closest('a, button, input, textarea, .card, form, .note, .wall, .insta')) return;
+
     blooms.push({ x: e.clientX, y: e.clientY, t: 0, col: PINKS[Math.random() * PINKS.length | 0], rot: Math.random() * 6 });
     gbSound('bloom');
   });
@@ -576,9 +618,178 @@
   }
   loadWall();
 
+  // ---------- big floating sakura flowers (on their own layer above the page) ----------
+  const top = document.getElementById('top'), tctx = top.getContext('2d');
+  function sizeTop() { const dpr = devicePixelRatio || 1; top.width = innerWidth * dpr; top.height = innerHeight * dpr; tctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  sizeTop(); addEventListener('resize', sizeTop);
+  const BIG_PINK = ['#fbd3e0', '#f6b6cb', '#ef93b2', '#e07399', '#c95580'];
+  const bigs = [];
+  function placeBigs() {
+    bigs.length = 0;
+    // they float up and down the sides of the page, out of the way of the content
+    const spots = innerWidth < 700 ? [[0.9, 0.55]] : [[0.055, 0.42], [0.945, 0.62]];
+    for (const [bx, by] of spots) bigs.push({
+      bx, by, R: innerWidth < 700 ? 40 : Math.min(64, innerWidth * 0.045),
+      ph: Math.random() * 10, rot: Math.random() * 6, rs: (Math.random() < 0.5 ? -1 : 1) * (0.0002 + Math.random() * 0.0002), hover: 0,
+    });
+  }
+  placeBigs(); addEventListener('resize', placeBigs);
+  function bigPos(b, t) {
+    return { x: b.bx * innerWidth + Math.sin(t * 0.00023 + b.ph) * Math.min(40, innerWidth * 0.02), y: b.by * innerHeight + Math.cos(t * 0.00019 + b.ph * 1.3) * innerHeight * 0.22 };
+  }
+  let hoverBig = null, lastT = 0;
+  addEventListener('pointermove', e => {
+    hoverBig = null;
+    for (const b of bigs) { const p = bigPos(b, lastT); if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < b.R * 0.95) hoverBig = b; }
+    const overUI = e.target.closest && e.target.closest('a, button, input, textarea, .card, form, .note, .wall, .hobby');
+    document.body.style.cursor = hoverBig ? 'pointer' : '';
+  });
+  function drawBigs(t) {
+    tctx.clearRect(0, 0, innerWidth, innerHeight);
+    const sctx = tctx;
+    const cw = 7, ch = 9;
+    for (const b of bigs) {
+      b.hover += ((b === hoverBig ? 1 : 0) - b.hover) * 0.15;
+      const { x, y } = bigPos(b, t), R = b.R * (1 + b.hover * 0.14), rot = b.rot + t * b.rs;
+      sctx.font = `bold 10px ui-monospace, Menlo, Consolas, monospace`;
+      sctx.globalAlpha = 0.82 + b.hover * 0.18;
+      for (let gy = -Math.ceil(R / ch); gy <= Math.ceil(R / ch); gy++) for (let gx = -Math.ceil(R / cw); gx <= Math.ceil(R / cw); gx++) {
+        const dx = gx * cw, dy = gy * ch, d = Math.hypot(dx, dy) / R, a = Math.atan2(dy, dx) - rot;
+        const lobe = Math.abs(Math.cos(a * 2.5));
+        // five petals, each with the little notch sakura petals have at the tip
+        const edge = (0.32 + 0.68 * Math.pow(lobe, 0.55)) * (1 - 0.16 * Math.pow(lobe, 40));
+        if (d > edge) continue;
+        let c, col;
+        if (d < 0.17) { c = d < 0.08 ? '@' : 'o'; col = '#e8b33d'; }
+        else if (d < 0.3 && Math.abs(Math.sin(a * 5)) < 0.25) { c = '.'; col = '#c95580'; }     // little stamens
+        else {
+          const k = d / edge;
+          col = BIG_PINK[Math.min(4, Math.floor(k * 3.2 + (b.hover > 0.5 ? 0 : 0.6)))];
+          c = k > 0.86 ? 'o' : k > 0.55 ? '%' : '*';
+        }
+        sctx.fillStyle = col;
+        sctx.fillText(c, x + dx - 3, y + dy + 3);
+      }
+      sctx.globalAlpha = 1;
+      if (b.hover > 0.05) {
+        sctx.font = `700 ${18}px Gaegu, ui-monospace, monospace`;
+        sctx.fillStyle = `rgba(201, 86, 127, ${b.hover})`;
+        const m = 'click me ✿', w = sctx.measureText(m).width;
+        sctx.fillText(m, x - w / 2, y + R + 22);
+      }
+    }
+  }
+
+  // hobbies popup shaped like a little sakura
+  const hobby = document.getElementById('hobby');
+  (function petals() {
+    const g = document.getElementById('petalShapes');
+    const path = 'M0,-18 C-46,-40 -54,-104 -16,-124 L0,-108 L16,-124 C54,-104 46,-40 0,-18 Z';
+    g.innerHTML = [0, 1, 2, 3, 4].map(i => `<path d="${path}" transform="rotate(${i * 72})" fill="${i % 2 ? '#ffd2e0' : '#ffc2d6'}" stroke="#f3a3bf" stroke-width="2"/>`).join('');
+  })();
+  function openHobby(x, y) {
+    hobby.hidden = false; hobby.classList.remove('hide'); hobby.classList.remove('show'); void hobby.offsetWidth; hobby.classList.add('show');
+    hobby.style.left = Math.max(4, Math.min(innerWidth - 334, x - 165)) + 'px';
+    hobby.style.top = Math.max(4, Math.min(innerHeight - 334, y - 165)) + 'px';
+    for (let k = 0; k < 16; k++) {
+      const p = makePetalRaw(), a = k / 16 * Math.PI * 2;
+      Object.assign(p, { x, y, z: 0.7 + Math.random() * 0.3, pushX: Math.cos(a) * rnd(3, 6), pushY: Math.sin(a) * rnd(3, 6) - 1 });
+      p.size = 11 + p.z * 13; petals.push(p);
+    }
+    gbSound('sign');
+  }
+  function closeHobby() {
+    if (hobby.hidden) return;
+    hobby.classList.remove('show'); hobby.classList.add('hide');
+    setTimeout(() => { hobby.hidden = true; }, 240);
+  }
+  hobby.querySelector('.x').addEventListener('click', e => { e.stopPropagation(); closeHobby(); });
+  addEventListener('click', e => {
+    if (e.target.closest && e.target.closest('.hobby')) return;
+    for (const b of bigs) {
+      const p = bigPos(b, lastT);
+      if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < b.R * 0.95) { e.preventDefault(); e.stopPropagation(); openHobby(p.x, p.y); return; }
+    }
+  }, true);
+
+  // ---------- hidden surprises ----------
+  const secretEl = document.getElementById('secret');
+  function secret(msg) { secretEl.textContent = msg; secretEl.classList.add('show'); setTimeout(() => secretEl.classList.remove('show'), 3200); }
+  let typed = '';
+  addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input, textarea')) return;
+    if (e.key === 'Escape') closeHobby();
+    if (e.key.length !== 1) return;
+    typed = (typed + e.key.toLowerCase()).slice(-12);
+    if (typed.endsWith('koi')) { typed = ''; swimKoi(); }
+    if (typed.endsWith('sakura')) { typed = ''; petalStorm(); }
+  });
+  let starTaps = 0, starTimer = null;
+  document.getElementById('star').addEventListener('click', e => {
+    e.stopPropagation();
+    const st = e.currentTarget; st.classList.add('tap'); setTimeout(() => st.classList.remove('tap'), 150);
+    starTaps++; clearTimeout(starTimer); starTimer = setTimeout(() => starTaps = 0, 900);
+    if (starTaps >= 3) { starTaps = 0; swimKoi(); }
+  });
+  function petalStorm() {
+    secret('🌸 sakura storm! 🌸');
+    for (let k = 0; k < 220; k++) {
+      const p = makePetalRaw(); Object.assign(p, { x: -40 - Math.random() * 300, y: Math.random() * innerHeight, pushX: rnd(6, 12), pushY: rnd(-2, 1) });
+      petals.push(p);
+    }
+    setTimeout(() => { if (petals.length > 520) petals.splice(0, petals.length - 520); }, 6000);
+  }
+  // a big koi made of text swims across the page
+  let koiSwim = null;
+  function swimKoi() {
+    if (koiSwim) return;
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    koiSwim = { t: 0, dir, y: innerHeight * (0.3 + Math.random() * 0.4), spots: Array.from({ length: 16 }, () => Math.random() < 0.45) };
+    secret('🐟 you found a secret koi!');
+  }
+  function drawKoiSwim() {
+    if (!koiSwim) return;
+    const sctx = tctx;
+    const K = koiSwim; K.t++;
+    const dur = 420, p = K.t / dur;
+    if (p > 1) { koiSwim = null; return; }
+    const span = innerWidth + 500, headX = K.dir > 0 ? -250 + span * p : innerWidth + 250 - span * p;
+    const cw = 8, ch = 12, SEG = 16, L = 15, W = 46;
+    const spine = [];
+    for (let i = 0; i < SEG; i++) {
+      const x = headX - K.dir * i * L;
+      spine.push({ x, y: K.y + Math.sin(x * 0.012 - K.t * 0.08) * 22 * (0.4 + i / SEG) });
+    }
+    // push petals out of the way
+    for (const pt of petals) { const d = Math.hypot(pt.x - spine[3].x, pt.y - spine[3].y); if (d < 120 && d > 1) { pt.pushX += (pt.x - spine[3].x) / d * 0.9; pt.pushY += (pt.y - spine[3].y) / d * 0.9; } }
+    sctx.font = `bold 12px ui-monospace, Menlo, Consolas, monospace`;
+    const cells = new Map();
+    const stamp = (x, y, r, col, c) => {
+      for (let gy = Math.floor((y - r) / ch); gy <= Math.ceil((y + r) / ch); gy++) for (let gx = Math.floor((x - r) / cw); gx <= Math.ceil((x + r) / cw); gx++) {
+        const d = Math.hypot(gx * cw - x, gy * ch - y) / r; if (d > 1) continue;
+        const key = gx + ',' + gy; if (!cells.has(key)) cells.set(key, [gx, gy, c || (d > 0.8 ? '*' : d > 0.5 ? '#' : '@'), col]);
+      }
+    };
+    // eyes and head first so they sit on top
+    const h = spine[0], n = spine[1], ang = Math.atan2(h.y - n.y, h.x - n.x);
+    for (const sd of [1, -1]) stamp(h.x - Math.cos(ang) * 8 + Math.cos(ang + sd * 1.57) * 11, h.y - Math.sin(ang) * 8 + Math.sin(ang + sd * 1.57) * 11, 2, '#2b1a14', '0');
+    for (let i = 0; i < SEG; i++) {
+      const u = i / (SEG - 1), w = u < 0.15 ? 0.6 + u * 2.6 : u < 0.35 ? 1 : 1 - (u - 0.35) * 1.3;
+      stamp(spine[i].x, spine[i].y, Math.max(5, W * w * 0.55), K.spots[i] ? '#f4f1ea' : '#ee6a2a');
+    }
+    // fins and tail
+    for (const sd of [1, -1]) { const a = ang + Math.PI + sd * 2.1; stamp(spine[4].x + Math.cos(a) * 20, spine[4].y + Math.sin(a) * 20, 8, '#f6a06a', sd > 0 ? '\\' : '/'); }
+    const tl = spine[SEG - 1];
+    for (const sd of [1, -1]) stamp(tl.x - K.dir * 14, tl.y + sd * 12, 10, '#f6a06a', '|');
+    for (const [gx, gy, c, col] of cells.values()) { sctx.fillStyle = col; sctx.fillText(c, gx * cw, gy * ch); }
+  }
+
   function frame(t) {
+    lastT = t;
     drawSky(t);
     drawBranch(t);
+    drawBigs(t);
+    drawKoiSwim();
     drawBlooms();
     for (const sc of scenes) {
       if (!visible.has(sc.cv) && t > 100) continue;
