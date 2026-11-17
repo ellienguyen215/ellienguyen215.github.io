@@ -6,17 +6,17 @@
 <title>ascii corner</title>
 <meta name="description" content="Little living scenes made entirely of text characters.">
 <style>
-  :root { --bg: #0d0a12; --ink: #e9e4da; --dim: #8b8f9c; --line: rgba(233, 228, 218, .12); }
+  :root { --bg: #f2e8d8; --ink: #3d2f2a; --dim: #8a776b; --line: rgba(61, 47, 42, .14); }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink);
     font: 14px/1.6 ui-monospace, Menlo, Consolas, "Courier New", monospace; }
-  body { background: radial-gradient(ellipse at 50% -10%, #2a1626 0%, #140d18 45%, var(--bg) 100%) fixed; }
+  body { background: radial-gradient(ellipse at 50% -10%, #fbf4e9 0%, #f5ecde 45%, var(--bg) 100%) fixed; }
   #sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
   main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 64px 22px 40px; }
   header { text-align: center; margin-bottom: 46px; }
   pre.title {
     display: inline-block; margin: 0; font-size: clamp(9px, 2.1vw, 17px); line-height: 1.15; text-align: left;
-    background: linear-gradient(90deg, #ffb46b, #ffd9a0 35%, #9fe3e8 70%, #b9c8ff);
+    background: linear-gradient(90deg, #d5703a, #c9567f 40%, #3f8a94 75%, #5a6db0);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .tag { color: var(--dim); margin-top: 14px; }
@@ -24,10 +24,10 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 22px; }
   a.card, div.card {
     display: block; color: inherit; text-decoration: none; border: 1px solid var(--line); border-radius: 14px;
-    background: rgba(12, 16, 24, .78); overflow: hidden; backdrop-filter: blur(3px);
+    background: rgba(255, 251, 244, .82); overflow: hidden; backdrop-filter: blur(3px); box-shadow: 0 4px 18px rgba(120, 90, 70, .08);
     transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
-  a.card:hover, a.card:focus-visible { transform: translateY(-4px); border-color: rgba(233, 228, 218, .35); box-shadow: 0 14px 40px rgba(0, 0, 0, .45); outline: none; }
+  a.card:hover, a.card:focus-visible { transform: translateY(-4px); border-color: rgba(61, 47, 42, .3); box-shadow: 0 16px 40px rgba(120, 90, 70, .22); outline: none; }
   .card canvas { display: block; width: 100%; height: 190px; border-bottom: 1px solid var(--line); }
   .card .body { padding: 14px 18px 18px; }
   .card h2 { margin: 0 0 4px; font-size: 16px; font-weight: normal; letter-spacing: .02em; }
@@ -89,7 +89,7 @@
 
   // ---------- background: sakura petals drifting down ----------
   const sky = document.getElementById('sky'), sctx = sky.getContext('2d');
-  const PINKS = ['#ffb7d0', '#ffcadb', '#ff9cc1', '#ffe1ec', '#f7a8c4'];
+  const PINKS = ['#e7799f', '#ef8fb0', '#d8638b', '#f3a3bf', '#c95580'];
   const TUMBLE = [',', '`', "'", '*', '~', "'"];
   let petals = [], mouse = { x: -999, y: -999, vx: 0, vy: 0 };
   function makePetal(top) {
@@ -118,18 +118,18 @@
     for (const p of petals) {
       // the breeze, a gentle sway, and petals swirling away from your mouse
       const dx = p.x - mouse.x, dy = p.y - mouse.y, d = Math.hypot(dx, dy);
-      if (d < 90 && d > 0.1) {
-        const f = (1 - d / 90) * 0.6;
-        p.pushX += dx / d * f + mouse.vx * 0.02 * f; p.pushY += dy / d * f + mouse.vy * 0.02 * f;
+      if (d < 170 && d > 0.1) {
+        const f = (1 - d / 170) * 1.8;
+        p.pushX += dx / d * f + mouse.vx * 0.07 * f; p.pushY += dy / d * f + mouse.vy * 0.07 * f;
       }
-      p.pushX *= 0.94; p.pushY *= 0.94;
+      p.pushX *= 0.95; p.pushY *= 0.95;
       p.sway += p.swaySp; p.spin += p.spinSp * (1 + Math.abs(p.pushX) * 0.3);
       p.x += p.vx + Math.sin(p.sway) * 0.6 + p.pushX;
       p.y += p.vy + Math.cos(p.sway * 0.7) * 0.15 + p.pushY;
-      if (p.y > innerHeight + 20 || p.x > innerWidth + 120 || p.x < -140) Object.assign(p, makePetal(true));
+      if (p.y > innerHeight + 20 || p.y < -200 || p.x > innerWidth + 160 || p.x < -180) Object.assign(p, makePetal(true));
       const c = p.flower ? ['✿', '❀', '✿', '*'][Math.floor(p.spin * 0.5) % 4] : TUMBLE[Math.floor(p.spin) % TUMBLE.length];
       sctx.font = `${p.size}px ui-monospace, Menlo, Consolas, monospace`;
-      sctx.globalAlpha = 0.4 + p.z * 0.6;
+      sctx.globalAlpha = 0.45 + p.z * 0.55;
       sctx.fillStyle = p.col;
       sctx.fillText(c, p.x, p.y);
     }
@@ -240,15 +240,15 @@
   // coming soon: a slow sparkle
   function drawSoon(sc, t) {
     const { ctx } = sc;
-    ctx.fillStyle = '#0b0e15'; ctx.fillRect(0, 0, sc.w, sc.h);
+    ctx.fillStyle = '#efe4d2'; ctx.fillRect(0, 0, sc.w, sc.h);
     const cx = sc.w / 2, cy = sc.h / 2;
     for (let i = 0; i < 26; i++) {
       const a = i / 26 * Math.PI * 2 + t * 0.0003, r = 40 + 26 * Math.sin(t * 0.001 + i * 1.7);
       const tw = Math.sin(t * 0.003 + i * 2.1);
-      ctx.fillStyle = tw > 0.6 ? '#e9e4da' : '#5a5e6a';
+      ctx.fillStyle = tw > 0.6 ? '#c9567f' : '#c7b39f';
       ctx.fillText(tw > 0.6 ? '+' : '.', cx + Math.cos(a) * r * 1.6, cy + Math.sin(a) * r * 0.7);
     }
-    ctx.font = `14px ${FONT}`; ctx.fillStyle = '#e9e4da';
+    ctx.font = `14px ${FONT}`; ctx.fillStyle = '#8a776b';
     const s = '. . .'; ctx.fillText(s, cx - ctx.measureText(s).width / 2, cy - 6);
     ctx.font = `11px ${FONT}`;
   }
