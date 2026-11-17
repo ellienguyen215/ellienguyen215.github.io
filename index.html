@@ -209,13 +209,14 @@
         <div class="chips"><span>roast food</span><span>rain &amp; snow</span><span>owl</span><span>sound</span></div>
       </div>
     </a>
-    <div class="card soon">
-      <canvas data-scene="soon" aria-hidden="true"></canvas>
+    <a class="card" href="https://ellienguyen215.github.io/ascii-cafe/">
+      <canvas data-scene="cafe" aria-hidden="true"></canvas>
       <div class="body">
-        <h2>coming soon…</h2>
-        <p>Something new is on its way.</p>
+        <h2>rainy café <span class="arrow">→</span></h2>
+        <p>A cozy window on a rainy night. Wipe the foggy glass, wake the sleepy cat, sip your coffee, and listen to the storm with lofi on.</p>
+        <div class="chips"><span>wipe the fog</span><span>sleepy cat</span><span>thunderstorm</span><span>lofi</span></div>
       </div>
-    </div>
+    </a>
   </section>
 
   <section class="gb" id="guestbook">
@@ -414,21 +415,39 @@
     ctx.fillStyle = '#5d5a5c'; ctx.fillText('o O @  o   O o @', cx - 8 * cw, base + ch);
   }
 
-  // coming soon: a slow sparkle
-  function drawSoon(sc, t) {
-    const { ctx } = sc;
-    const night = document.documentElement.dataset.time === 'night';
-    ctx.fillStyle = night ? '#1d1424' : '#efe4d2'; ctx.fillRect(0, 0, sc.w, sc.h);
-    const cx = sc.w / 2, cy = sc.h / 2;
-    for (let i = 0; i < 26; i++) {
-      const a = i / 26 * Math.PI * 2 + t * 0.0003, r = 40 + 26 * Math.sin(t * 0.001 + i * 1.7);
-      const tw = Math.sin(t * 0.003 + i * 2.1);
-      ctx.fillStyle = tw > 0.6 ? '#c9567f' : '#c7b39f';
-      ctx.fillText(tw > 0.6 ? '+' : '.', cx + Math.cos(a) * r * 1.6, cy + Math.sin(a) * r * 0.7);
+  // rainy café preview: a little window with city lights, rain and a cat on the sill
+  const cafeDrops = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random(), v: 0 }));
+  const cafeCity = Array.from({ length: 12 }, (_, i) => ({ x: i / 12, h: 0.25 + Math.random() * 0.4, w: Array.from({ length: 12 }, () => Math.random() < 0.5) }));
+  function drawCafe(sc, t) {
+    const { ctx, cw, ch } = sc, W = sc.w, H = sc.h;
+    ctx.fillStyle = '#22170f'; ctx.fillRect(0, 0, W, H);
+    const x0 = W * 0.08, x1 = W * 0.92, y0 = H * 0.12, y1 = H * 0.8;
+    const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, '#0b1026'); g.addColorStop(0.6, '#262448'); g.addColorStop(1, '#5a3650');
+    ctx.fillStyle = g; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    for (const b of cafeCity) {
+      const bx = x0 + b.x * (x1 - x0), bw = (x1 - x0) / 12, top = y1 - b.h * (y1 - y0);
+      ctx.fillStyle = '#0b0d17'; ctx.fillRect(bx, top, bw - 1, y1 - top);
+      b.w.forEach((on, k) => { if (!on) return; if (Math.random() < 0.002) b.w[k] = false;
+        ctx.fillStyle = k % 3 ? '#ffd27a' : '#ffb0c8'; ctx.fillRect(bx + 2 + (k % 2) * (bw / 2 - 1), top + 4 + Math.floor(k / 2) * 7, 3, 3); });
+      if (Math.random() < 0.002) b.w[Math.random() * 12 | 0] = true;
     }
-    ctx.font = `14px ${FONT}`; ctx.fillStyle = '#8a776b';
-    const s = '. . .'; ctx.fillText(s, cx - ctx.measureText(s).width / 2, cy - 6);
-    ctx.font = `11px ${FONT}`;
+    ctx.fillStyle = 'rgba(214,224,238,.16)'; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    for (const d of cafeDrops) {
+      if (d.v === 0 && Math.random() < 0.003) d.v = 0.002;
+      if (d.v) { d.v = Math.min(0.012, d.v + 0.0003); d.y += d.v; if (d.y > 1) { d.y = 0; d.v = 0; d.x = Math.random(); } }
+      ctx.fillStyle = d.v ? '#e6f2ff' : '#bcd3ea';
+      ctx.fillText(d.r < 0.5 ? '.' : d.r < 0.8 ? ',' : 'o', x0 + d.x * (x1 - x0), y0 + d.y * (y1 - y0) - 8);
+    }
+    ctx.fillStyle = '#5a3a26';
+    ctx.fillRect(x0 - 4, y0 - 4, x1 - x0 + 8, 4); ctx.fillRect(x0 - 4, y1, x1 - x0 + 8, 6); ctx.fillRect(x0 - 4, y0, 4, y1 - y0); ctx.fillRect(x1, y0, 4, y1 - y0); ctx.fillRect((x0 + x1) / 2 - 1, y0, 3, y1 - y0);
+    ctx.fillStyle = '#f6b374';
+    const cat = ['/\\_/\\', '(-.-)', '(___)~'], cx = x1 - 56, cy = y1 - 3 * 11;
+    cat.forEach((l, r) => ctx.fillText(l, cx, cy + r * 11));
+    ctx.fillStyle = '#ffe8cc'; const zp = (t * 0.0004) % 1; ctx.globalAlpha = 1 - zp; ctx.fillText('z', cx + 40 + zp * 10, cy - zp * 14); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#efe2d0'; ['.---.', '|~~~|]', "`---'"].forEach((l, r) => ctx.fillText(l, x0 + 30, y1 - 33 + r * 11));
+    for (let k = 0; k < 8; k++) { const lx = x0 + (k + 0.5) / 8 * (x1 - x0), tw = 0.6 + 0.4 * Math.sin(t * 0.002 + k);
+      ctx.fillStyle = ['#ffcf6e', '#ff9e7a', '#ffb3cf', '#a9e3ff'][k % 4]; ctx.globalAlpha = tw; ctx.fillText('o', lx, y0 - 14 + Math.sin(k / 7 * Math.PI) * 4); }
+    ctx.globalAlpha = 1;
   }
 
   // only animate what's on screen
@@ -1078,7 +1097,7 @@
       if (!visible.has(sc.cv) && t > 100) continue;
       if (sc.kind === 'pond') drawPond(sc, t);
       else if (sc.kind === 'fire') drawFire(sc, t);
-      else drawSoon(sc, t);
+      else drawCafe(sc, t);
     }
     if (!reduce) requestAnimationFrame(frame);
   }
