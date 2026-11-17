@@ -111,15 +111,15 @@
   .wall .empty { grid-column: 1 / -1; text-align: center; color: var(--dim); font-size: 20px; }
 
   /* ---------- hobbies sakura popup ---------- */
-  .hobby { position: fixed; z-index: 20; width: 330px; height: 330px; pointer-events: none; transform-origin: center; }
+  .hobby { position: fixed; z-index: 20; width: 360px; height: 360px; pointer-events: none; transform-origin: center; }
   .hobby[hidden] { display: none; }
   .hobby.show { animation: bloomIn .55s cubic-bezier(.3, 1.5, .5, 1) both; }
   .hobby.hide { animation: bloomOut .25s ease-in both; }
   .hobby canvas.petals { position: absolute; inset: 0; width: 100%; height: 100%; }
   .hobby .txt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font: 700 18px/1.12 'Gaegu', ui-monospace, monospace; color: #6b3247; text-align: center; pointer-events: auto; }
-  .hobby .txt .h { font-size: 19px; color: #c9567f; margin-bottom: 3px; }
-  .hobby .x { position: absolute; top: 46px; right: 52px; pointer-events: auto; border: 0; background: rgba(255, 255, 255, .7);
+    font: 700 17px/1.12 'Gaegu', ui-monospace, monospace; color: var(--pop-ink, #6b3247); text-align: center; pointer-events: auto; }
+  .hobby .txt .h { font-size: 19px; color: var(--pop-head, #c9567f); margin-bottom: 3px; }
+  .hobby .x { position: absolute; top: 52px; right: 58px; pointer-events: auto; border: 0; background: rgba(255, 255, 255, .7);
     width: 26px; height: 26px; border-radius: 50%; color: #c9567f; font-size: 13px; cursor: pointer; }
   @keyframes bloomIn { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
   @keyframes bloomOut { to { transform: scale(.2) rotate(60deg); opacity: 0; } }
@@ -164,7 +164,7 @@
 <canvas id="sky"></canvas>
 <canvas id="top"></canvas>
 <div id="hobby" class="hobby" role="dialog" aria-label="my hobbies" hidden>
-  <canvas class="petals" width="330" height="330" aria-hidden="true"></canvas>
+  <canvas class="petals" width="360" height="360" aria-hidden="true"></canvas>
   <button class="x" aria-label="close">✕</button>
   <div class="txt">
     <div class="h">~ my hobbies ~</div>
@@ -659,20 +659,30 @@
   const top = document.getElementById('top'), tctx = top.getContext('2d');
   function sizeTop() { const dpr = devicePixelRatio || 1; top.width = innerWidth * dpr; top.height = innerHeight * dpr; tctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
   sizeTop(); addEventListener('resize', sizeTop);
-  const BIG_PINK = ['#fbd3e0', '#f6b6cb', '#ef93b2', '#e07399', '#c95580'];
+  const FLOWERS = [
+    { title: '~ my hobbies ~', lines: ['vibe coding', 'drawing', 'taekwondo'],
+      big: ['#fbd3e0', '#f6b6cb', '#ef93b2', '#e07399', '#c95580'], pop: ['#f7c3d3', '#f1a5bd', '#e8859f', '#da6690', '#c44f78'],
+      back: 'rgba(255, 244, 248, .97)', centre: '#f3cbd8', ink: '#6b3247', head: '#c9567f', label: '201, 86, 127' },
+    { title: '~ favorite things ~', lines: ['color: light blue', 'food: pho', 'artists: CORTIS, BTS,', 'yung kai, yi hao zhang'],
+      big: ['#e2f1ff', '#c4e2fb', '#a2d0f6', '#7fb9ec', '#5c9dda'], pop: ['#cfe7fb', '#acd5f6', '#88bfef', '#679fe0', '#4a83c9'],
+      back: 'rgba(240, 248, 255, .97)', centre: '#cde3f6', ink: '#2c4866', head: '#3f7fc0', label: '63, 127, 192' },
+    { title: '~ fun fact ~', lines: ["i'm a 1st degree", 'black belt', 'in taekwondo!'],
+      big: ['#efe5fb', '#dccbf4', '#c8aeec', '#ad8edf', '#9172cf'], pop: ['#e4d8f6', '#d0bdf0', '#b99ee6', '#9f80d8', '#8465c6'],
+      back: 'rgba(248, 244, 255, .97)', centre: '#e1d4f3', ink: '#46336a', head: '#7a5abd', label: '122, 90, 189' },
+  ];
   const bigs = [];
   function placeBigs() {
     bigs.length = 0;
     // they float up and down the sides of the page, out of the way of the content
-    const spots = innerWidth < 700 ? [[0.9, 0.55]] : [[0.055, 0.42], [0.945, 0.62]];
-    for (const [bx, by] of spots) bigs.push({
-      bx, by, R: innerWidth < 700 ? 40 : Math.min(64, innerWidth * 0.045),
+    const spots = innerWidth < 700 ? [[0.9, 0.3], [0.1, 0.6], [0.9, 0.88]] : [[0.055, 0.3], [0.945, 0.52], [0.055, 0.8]];
+    spots.forEach(([bx, by], i) => bigs.push({
+      bx, by, info: FLOWERS[i], R: innerWidth < 700 ? 38 : Math.min(62, innerWidth * 0.044),
       ph: Math.random() * 10, rot: Math.random() * 6, rs: (Math.random() < 0.5 ? -1 : 1) * (0.0002 + Math.random() * 0.0002), hover: 0,
-    });
+    }));
   }
   placeBigs(); addEventListener('resize', placeBigs);
   function bigPos(b, t) {
-    return { x: b.bx * innerWidth + Math.sin(t * 0.00023 + b.ph) * Math.min(40, innerWidth * 0.02), y: b.by * innerHeight + Math.cos(t * 0.00019 + b.ph * 1.3) * innerHeight * 0.22 };
+    return { x: b.bx * innerWidth + Math.sin(t * 0.00023 + b.ph) * Math.min(40, innerWidth * 0.02), y: b.by * innerHeight + Math.cos(t * 0.00019 + b.ph * 1.3) * innerHeight * (innerWidth < 700 ? 0.07 : 0.11) };
   }
   let hoverBig = null, lastT = 0;
   addEventListener('pointermove', e => {
@@ -700,10 +710,10 @@
         if (d > edge) continue;
         let c, col;
         if (d < 0.17) { c = d < 0.08 ? '@' : 'o'; col = '#e8b33d'; }
-        else if (d < 0.3 && Math.abs(Math.sin(a * 5)) < 0.25) { c = '.'; col = '#c95580'; }     // little stamens
+        else if (d < 0.3 && Math.abs(Math.sin(a * 5)) < 0.25) { c = '.'; col = b.info.big[4]; }     // little stamens
         else {
           const k = d / edge;
-          col = BIG_PINK[Math.min(4, Math.floor(k * 3.2 + (b.hover > 0.5 ? 0 : 0.6)))];
+          col = b.info.big[Math.min(4, Math.floor(k * 3.2 + (b.hover > 0.5 ? 0 : 0.6)))];
           c = k > 0.86 ? 'o' : k > 0.55 ? '%' : '*';
         }
         sctx.fillStyle = col;
@@ -712,7 +722,7 @@
       sctx.globalAlpha = 1;
       if (b.hover > 0.05 && b !== openedBig) {
         sctx.font = `700 ${18}px Gaegu, ui-monospace, monospace`;
-        sctx.fillStyle = `rgba(201, 86, 127, ${b.hover})`;
+        sctx.fillStyle = `rgba(${b.info.label}, ${b.hover})`;
         const m = 'click me ✿', w = sctx.measureText(m).width;
         sctx.fillText(m, x - w / 2, y + R + 22);
       }
@@ -723,14 +733,14 @@
   const hobby = document.getElementById('hobby');
   // the popup flower is drawn in text characters too
   const hcv = hobby.querySelector('canvas.petals'), hctx = hcv.getContext('2d');
-  (function sizeH() { const dpr = devicePixelRatio || 1; hcv.width = 330 * dpr; hcv.height = 330 * dpr; hctx.setTransform(dpr, 0, 0, dpr, 0, 0); })();
-  const HP = ['#f7c3d3', '#f1a5bd', '#e8859f', '#da6690', '#c44f78'];
+  (function sizeH() { const dpr = devicePixelRatio || 1; hcv.width = 360 * dpr; hcv.height = 360 * dpr; hctx.setTransform(dpr, 0, 0, dpr, 0, 0); })();
+  let popInfo = FLOWERS[0];
   function drawHobbyFlower(t) {
     if (hobby.hidden) return;
-    const c = hctx, cx = 165, cy = 165, R = 158, cw = 7, ch = 9, rot = t * 0.00012;
-    c.clearRect(0, 0, 330, 330);
+    const c = hctx, cx = 180, cy = 180, R = 174, cw = 7, ch = 9, rot = t * 0.00012, HP = popInfo.pop;
+    c.clearRect(0, 0, 360, 360);
     // solid soft backing so the flower isn't see-through
-    c.fillStyle = 'rgba(255, 244, 248, .96)';
+    c.fillStyle = popInfo.back;
     c.beginPath();
     for (let k = 0; k <= 200; k++) {
       const a = k / 200 * Math.PI * 2, lobe = Math.abs(Math.cos((a - rot) * 2.5));
@@ -745,21 +755,29 @@
       const edge = (0.36 + 0.64 * Math.pow(lobe, 0.55)) * (1 - 0.16 * Math.pow(lobe, 40));
       if (d > edge) continue;
       let ch2, col;
-      if (d < 0.48) { ch2 = d < 0.44 ? '.' : ':'; col = '#f3cbd8'; }                           // soft centre for the words
-      else if (d < 0.54 && Math.abs(Math.sin(a * 5)) < 0.3) { ch2 = 'o'; col = '#e8b33d'; }   // stamens
-      else { const k = (d - 0.48) / (edge - 0.48); col = HP[Math.min(4, Math.floor(k * 4.4))]; ch2 = k > 0.82 ? 'o' : k > 0.45 ? '%' : '*'; }
+      if (d < 0.52) { ch2 = d < 0.48 ? '.' : ':'; col = popInfo.centre; }                       // soft centre for the words
+      else if (d < 0.58 && Math.abs(Math.sin(a * 5)) < 0.3) { ch2 = 'o'; col = '#e8b33d'; }   // stamens
+      else { const k = (d - 0.52) / (edge - 0.52); col = HP[Math.min(4, Math.floor(k * 4.4))]; ch2 = k > 0.82 ? 'o' : k > 0.45 ? '%' : '*'; }
       c.fillStyle = col; c.fillText(ch2, cx + dx - 3, cy + dy + 3);
     }
   }
   let openedBig = null;
+  const txtEl = hobby.querySelector('.txt');
   function openHobby(x, y, big) {
     openedBig = big || null;
+    popInfo = (big && big.info) || FLOWERS[0];
+    txtEl.innerHTML = '';
+    const h = document.createElement('div'); h.className = 'h'; h.textContent = popInfo.title; txtEl.appendChild(h);
+    for (const line of popInfo.lines) { const d = document.createElement('div'); d.textContent = line; txtEl.appendChild(d); }
+    hobby.style.setProperty('--pop-ink', popInfo.ink); hobby.style.setProperty('--pop-head', popInfo.head);
+    hobby.setAttribute('aria-label', popInfo.title.replace(/~/g, '').trim());
+    hobby.querySelector('.x').style.color = popInfo.head;
     hobby.hidden = false; hobby.classList.remove('hide'); hobby.classList.remove('show'); void hobby.offsetWidth; hobby.classList.add('show');
-    hobby.style.left = Math.max(4, Math.min(innerWidth - 334, x - 165)) + 'px';
-    hobby.style.top = Math.max(4, Math.min(innerHeight - 334, y - 165)) + 'px';
+    hobby.style.left = Math.max(4, Math.min(innerWidth - 364, x - 180)) + 'px';
+    hobby.style.top = Math.max(4, Math.min(innerHeight - 364, y - 180)) + 'px';
     for (let k = 0; k < 16; k++) {
       const p = makePetalRaw(), a = k / 16 * Math.PI * 2;
-      Object.assign(p, { x, y, z: 0.7 + Math.random() * 0.3, pushX: Math.cos(a) * rnd(3, 6), pushY: Math.sin(a) * rnd(3, 6) - 1 });
+      Object.assign(p, { x, y, col: popInfo.big[1 + (k % 4)], z: 0.7 + Math.random() * 0.3, pushX: Math.cos(a) * rnd(3, 6), pushY: Math.sin(a) * rnd(3, 6) - 1 });
       p.size = 11 + p.z * 13; petals.push(p);
     }
     gbSound('sign');
