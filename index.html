@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ascii corner</title>
+<title>Welcome to my corner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
 <meta name="description" content="Little living scenes made entirely of text characters.">
 <style>
   :root { --bg: #f2e8d8; --ink: #3d2f2a; --dim: #8a776b; --line: rgba(61, 47, 42, .14); }
@@ -19,7 +22,14 @@
     background: linear-gradient(90deg, #d5703a, #c9567f 40%, #3f8a94 75%, #5a6db0);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .tag { color: var(--dim); margin-top: 14px; }
+  pre.title.t2 { display: block; width: max-content; margin: 2px auto 0; }
+  .insta {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 3px 12px 4px; border-radius: 20px;
+    font-family: 'Gaegu', ui-monospace, monospace; font-size: 21px; font-weight: 700; color: #c9567f; text-decoration: none;
+    border: 1px dashed rgba(201, 86, 127, .4); background: rgba(255, 245, 248, .6); transition: transform .2s, background .2s;
+  }
+  .insta:hover { transform: translateY(-2px) rotate(-1deg); background: rgba(255, 232, 240, .9); }
+  .tag { color: var(--dim); margin-top: 12px; }
   .tag b { color: var(--ink); font-weight: normal; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 22px; }
   a.card, div.card {
@@ -38,6 +48,62 @@
   .card .chips span { font-size: 11px; color: var(--dim); border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; }
   .card.soon { opacity: .7; }
   .card.soon canvas { height: 190px; }
+  /* ---------- guestbook ---------- */
+  .gb { margin-top: 60px; font-family: 'Gaegu', ui-monospace, monospace; }
+  .gb h2 { text-align: center; font-size: 34px; font-weight: 700; margin: 0; color: #c9567f; }
+  .gb .sub { text-align: center; color: var(--dim); font-size: 19px; margin: 2px 0 22px; }
+  .gb-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 22px; align-items: start; }
+  .gb form, .note {
+    background: rgba(255, 251, 244, .9); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+    box-shadow: 0 4px 18px rgba(120, 90, 70, .08);
+  }
+  .gb label { display: block; font-size: 19px; color: var(--dim); margin: 0 0 4px; }
+  .gb input, .gb textarea {
+    width: 100%; font: 700 22px 'Gaegu', ui-monospace, monospace; color: var(--ink); background: #fffaf2;
+    border: 2px dashed rgba(201, 86, 127, .3); border-radius: 10px; padding: 6px 12px; outline: none; transition: border-color .2s, transform .1s;
+  }
+  .gb textarea { resize: none; height: 110px; line-height: 1.25; }
+  .gb input:focus, .gb textarea:focus { border-color: rgba(201, 86, 127, .75); background: #fff; }
+  .gb .field { margin-bottom: 12px; position: relative; }
+  .gb .count { position: absolute; right: 10px; bottom: 6px; font-size: 16px; color: var(--dim); }
+  .gb .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .gb button.sign {
+    font: 700 22px 'Gaegu', ui-monospace, monospace; color: #fff; background: #d8638b; border: 0; border-radius: 22px;
+    padding: 6px 20px 7px; cursor: pointer; box-shadow: 0 4px 0 #b34d74; transition: transform .1s, box-shadow .1s, background .2s;
+  }
+  .gb button.sign:hover { background: #e2709a; }
+  .gb button.sign:active { transform: translateY(3px); box-shadow: 0 1px 0 #b34d74; }
+  .gb button.sign:disabled { opacity: .5; cursor: default; }
+  .gb button.mute { font-size: 18px; background: none; border: 0; cursor: pointer; opacity: .7; }
+  .gb .hint { font-size: 16px; color: var(--dim); margin-top: 10px; line-height: 1.2; }
+  .gb .thanks { display: none; font-size: 20px; color: #c9567f; margin-top: 10px; }
+  .gb .thanks.show { display: block; animation: pop .4s ease; }
+  /* live preview note */
+  .note { position: relative; min-height: 200px; transform: rotate(1deg); background: #fff5f8; border-color: rgba(201, 86, 127, .25); }
+  .note::before { content: ''; position: absolute; top: -10px; left: 50%; width: 70px; height: 22px; transform: translateX(-50%) rotate(-3deg);
+    background: rgba(243, 163, 191, .55); border-radius: 3px; }
+  .note .from { font-size: 20px; color: var(--dim); }
+  .note .msg { font-size: 25px; font-weight: 700; line-height: 1.2; color: #4a3530; white-space: pre-wrap; word-break: break-word; margin-top: 6px; min-height: 60px; }
+  .note .msg span { display: inline-block; animation: letter .35s cubic-bezier(.3, 1.6, .5, 1) both; white-space: pre; }
+  .note .caret { display: inline-block; width: 2px; height: 22px; background: #c9567f; vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+  .note .placeholder { color: #c7b39f; }
+  @keyframes letter { 0% { transform: translateY(8px) scale(.3) rotate(-12deg); opacity: 0; color: #e7799f; } 100% { transform: none; opacity: 1; } }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes pop { 0% { transform: scale(.8); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  .gb .floaty { position: fixed; pointer-events: none; z-index: 5; font-size: 16px; color: #e7799f; animation: floaty 1s ease-out forwards; }
+  @keyframes floaty { to { transform: translate(var(--dx), -46px) rotate(var(--rot)); opacity: 0; } }
+  .gb input.bump, .gb textarea.bump { transform: translateY(1px); }
+  /* signed messages */
+  .wall { margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+  .wall .entry { background: #fffaf2; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 10px; box-shadow: 0 3px 12px rgba(120, 90, 70, .08); animation: pop .5s ease both; }
+  .wall .entry:nth-child(4n+1) { transform: rotate(-1.2deg); background: #fff5f8; }
+  .wall .entry:nth-child(4n+2) { transform: rotate(.8deg); background: #f6f8ee; }
+  .wall .entry:nth-child(4n+3) { transform: rotate(-.5deg); background: #f2f6fb; }
+  .wall .entry:nth-child(4n) { transform: rotate(1.4deg); background: #fbf5ea; }
+  .wall .entry .m { font-size: 22px; font-weight: 700; line-height: 1.2; color: #4a3530; white-space: pre-wrap; word-break: break-word; }
+  .wall .entry .w { font-size: 17px; color: var(--dim); margin-top: 6px; text-align: right; }
+  .wall .empty { grid-column: 1 / -1; text-align: center; color: var(--dim); font-size: 20px; }
+
   footer { text-align: center; color: var(--dim); margin-top: 54px; font-size: 12px; }
   footer a { color: var(--dim); }
 </style>
@@ -46,10 +112,18 @@
 <canvas id="sky"></canvas>
 <main>
   <header>
-    <pre class="title" aria-label="ascii corner">             _ _
- __ _ ___ __(_|_)  __ ___ _ _ _ _  ___ _ _
-/ _` (_-&lt;/ _| | | / _/ _ \ &#x27;_| &#x27; \/ -_) &#x27;_|
-\__,_/__/\__|_|_| \__\___/_| |_||_\___|_|</pre>
+    <pre class="title" aria-label="Welcome to my corner">__      __   _                    _
+\ \    / /__| |__ ___ _ __  ___  | |_ ___
+ \ \/\/ / -_) / _/ _ \ &#x27;  \/ -_) |  _/ _ \
+  \_/\_/\___|_\__\___/_|_|_\___|  \__\___/</pre>
+    <pre class="title t2" aria-hidden="true"> _ __ _  _   __ ___ _ _ _ _  ___ _ _
+| &#x27;  \ || | / _/ _ \ &#x27;_| &#x27; \/ -_) &#x27;_|
+|_|_|_\_, | \__\___/_| |_||_\___|_|
+      |__/</pre>
+    <a class="insta" href="https://www.instagram.com/ellien_2012/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg>
+      @ellien_2012
+    </a>
     <div class="tag">little living scenes made entirely of <b>text characters</b> ✦</div>
   </header>
 
@@ -79,6 +153,35 @@
     </div>
   </section>
 
+  <section class="gb" id="guestbook">
+    <h2>✿ guestbook ✿</h2>
+    <div class="sub">leave me a little note!</div>
+    <div class="gb-wrap">
+      <form id="gbForm" autocomplete="off">
+        <div class="field">
+          <label for="gbName">your name</label>
+          <input id="gbName" maxlength="30" placeholder="your name…">
+        </div>
+        <div class="field">
+          <label for="gbMsg">your message</label>
+          <textarea id="gbMsg" maxlength="280" placeholder="write something nice…"></textarea>
+          <span class="count" id="gbCount">0/280</span>
+        </div>
+        <div class="row">
+          <button class="sign" type="submit" id="gbSign" disabled>sign the guestbook 💌</button>
+          <button class="mute" type="button" id="gbMute" title="typing sounds">🔊</button>
+        </div>
+        <div class="thanks" id="gbThanks">thank you! 💕 your note will show up here once it's approved.</div>
+        <div class="hint">signing opens GitHub so you can post your note (free account needed). notes appear after they're approved ✿</div>
+      </form>
+      <div class="note" aria-live="polite">
+        <div class="from" id="pvFrom">from: <span class="placeholder">someone nice</span></div>
+        <div class="msg" id="pvMsg"><span class="placeholder">your note will appear here as you type…</span></div>
+      </div>
+    </div>
+    <div class="wall" id="gbWall"><div class="empty">loading notes…</div></div>
+  </section>
+
   <footer>made with text characters · <a href="https://github.com/ellienguyen215">github</a></footer>
 </main>
 
@@ -92,7 +195,7 @@
   const PINKS = ['#e7799f', '#ef8fb0', '#d8638b', '#f3a3bf', '#c95580'];
   const TUMBLE = [',', '`', "'", '*', '~', "'"];
   let petals = [], mouse = { x: -999, y: -999, vx: 0, vy: 0 };
-  function makePetal(top) {
+  let makePetal = function (top) {
     const z = Math.random();                       // 0 = far away, 1 = close
     return {
       x: Math.random() * (innerWidth + 200) - 100, y: top ? -20 - Math.random() * 60 : Math.random() * innerHeight,
@@ -100,7 +203,7 @@
       sway: Math.random() * 10, swaySp: 0.008 + Math.random() * 0.012, spin: Math.random() * 6, spinSp: 0.03 + Math.random() * 0.08,
       flower: Math.random() < 0.32, col: PINKS[Math.random() * PINKS.length | 0], pushX: 0, pushY: 0,
     };
-  }
+  };
   function sizeSky() {
     const dpr = devicePixelRatio || 1;
     sky.width = innerWidth * dpr; sky.height = innerHeight * dpr;
@@ -258,8 +361,225 @@
   const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? visible.add(e.target) : visible.delete(e.target)));
   scenes.forEach(s => io.observe(s.cv));
 
+  // ---------- sakura branch (drawn in text) ----------
+  const BRANCH = '#6e4b3c', BRANCH_DK = '#55392d';
+  let branchCells = [], blossomSpots = [];
+  function buildBranch() {
+    branchCells = []; blossomSpots = [];
+    const sc = Math.min(0.78, innerWidth / 1400);
+    const cw = 8.4 * Math.max(0.8, sc), ch = 15 * Math.max(0.8, sc);
+    const limbs = [
+      // [points in px from the corner], thickness, mirrored?
+      { pts: [[-10, 40], [90, 70], [190, 64], [290, 110], [380, 120]], th: 2 },
+      { pts: [[190, 64], [240, 30], [300, 18]], th: 1 },
+      { pts: [[290, 110], [320, 160], [350, 190]], th: 1 },
+      { pts: [[90, 70], [130, 110], [150, 150]], th: 1 },
+    ];
+    const add = (pts, th, flip) => {
+      for (let k = 0; k < pts.length - 1; k++) {
+        const [x0, y0] = pts[k], [x1, y1] = pts[k + 1];
+        const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (cw * 0.9));
+        const slope = (y1 - y0) / (x1 - x0 || 1);
+        let c = Math.abs(slope) < 0.25 ? (th > 1 ? '~' : '-') : Math.abs(slope) > 2 ? '|' : slope > 0 ? '\\' : '/';
+        if (flip && (c === '\\' || c === '/')) c = c === '\\' ? '/' : '\\';
+        for (let i = 0; i <= n; i++) {
+          let x = (x0 + (x1 - x0) * i / n) * sc, y = (y0 + (y1 - y0) * i / n) * sc;
+          if (flip) x = innerWidth - x;
+          branchCells.push({ x, y, c, col: th > 1 ? BRANCH_DK : BRANCH, depth: x });
+          if (th > 1) branchCells.push({ x: x + 1.5, y: y + 2.5, c, col: BRANCH, depth: x });   // a second stroke makes the main limb thicker
+        }
+        // clusters of blossoms along each limb
+        for (let i = 1; i <= n; i += 3) {
+          let x = (x0 + (x1 - x0) * i / n) * sc, y = (y0 + (y1 - y0) * i / n) * sc;
+          if (flip) x = innerWidth - x;
+          const m = 3 + (Math.random() * 4 | 0);
+          for (let b = 0; b < m; b++) blossomSpots.push({ x: x + (Math.random() - 0.5) * 34 * sc, y: y + (Math.random() - 0.6) * 26 * sc,
+            c: ['✿', '❀', '✿', '*', 'o'][Math.random() * 5 | 0], col: PINKS[Math.random() * PINKS.length | 0], size: 13 + Math.random() * 7, ph: Math.random() * 10 });
+        }
+      }
+    };
+    for (const L of limbs) add(L.pts, L.th, false);
+    if (innerWidth > 700) for (const L of limbs.slice(0, 3)) add(L.pts.map(([x, y]) => [x * 0.8, y * 0.85 + 10]), L.th, true);
+  }
+  buildBranch(); addEventListener('resize', buildBranch);
+  function drawBranch(t) {
+    const sway = (x) => Math.sin(t * 0.0009 + x * 0.004) * 2.2;
+    const sy = -scrollY;
+    if (scrollY > 400) return;
+    sctx.font = `14px ui-monospace, Menlo, Consolas, monospace`;
+    sctx.font = `bold 14px ui-monospace, Menlo, Consolas, monospace`;
+    for (const c of branchCells) { sctx.fillStyle = c.col; sctx.fillText(c.c, c.x, c.y + sway(c.x) * 0.5 + sy); }
+    for (const b of blossomSpots) {
+      sctx.font = `${b.size}px ui-monospace, Menlo, Consolas, monospace`;
+      sctx.fillStyle = b.col; sctx.globalAlpha = 0.85 + Math.sin(t * 0.002 + b.ph) * 0.15;
+      sctx.fillText(b.c, b.x + sway(b.x), b.y + sway(b.x) * 0.6 + sy);
+    }
+    sctx.globalAlpha = 1;
+  }
+  // some new petals start from the branch blossoms instead of the top of the screen
+  const _makePetal = makePetal;
+  makePetal = function (top) {
+    const p = _makePetal(top);
+    if (top && blossomSpots.length && scrollY < 200 && Math.random() < 0.45) {
+      const b = blossomSpots[Math.random() * blossomSpots.length | 0];
+      p.x = b.x; p.y = b.y - scrollY; p.vy *= 0.7;
+    }
+    return p;
+  };
+
+  // ---------- click to bloom ----------
+  const blooms = [];
+  addEventListener('click', e => {
+    if (e.target.closest('a, button, input, textarea, .card, form, .note, .wall, .insta')) return;
+    blooms.push({ x: e.clientX, y: e.clientY, t: 0, col: PINKS[Math.random() * PINKS.length | 0], rot: Math.random() * 6 });
+    gbSound('bloom');
+  });
+  function drawBlooms() {
+    for (let i = blooms.length - 1; i >= 0; i--) {
+      const b = blooms[i]; b.t++;
+      const grow = Math.min(1, b.t / 26), ease = 1 - Math.pow(1 - grow, 3);
+      if (b.t < 70) {
+        sctx.font = `${16 + ease * 6}px ui-monospace, Menlo, Consolas, monospace`;
+        // five petals opening around a golden centre
+        for (let k = 0; k < 5; k++) {
+          const a = b.rot + k / 5 * Math.PI * 2 + b.t * 0.01, r = ease * 16;
+          sctx.fillStyle = b.col; sctx.globalAlpha = Math.min(1, b.t / 8);
+          sctx.fillText(ease < 0.4 ? '.' : ease < 0.8 ? 'o' : '❀', b.x + Math.cos(a) * r - 5, b.y + Math.sin(a) * r + 5);
+        }
+        sctx.fillStyle = '#e8b33d'; sctx.fillText(ease < 0.5 ? '.' : '@', b.x - 5, b.y + 5);
+        sctx.globalAlpha = 1;
+      } else {
+        // then it bursts into petals that join the others
+        for (let k = 0; k < 12; k++) {
+          const p = _makePetal(false), a = k / 12 * Math.PI * 2;
+          Object.assign(p, { x: b.x, y: b.y, col: b.col, z: 0.6 + Math.random() * 0.4, pushX: Math.cos(a) * rnd(2, 5), pushY: Math.sin(a) * rnd(2, 5) - 1.5 });
+          p.size = 11 + p.z * 13;
+          petals.push(p);
+        }
+        if (petals.length > 520) petals.splice(0, petals.length - 520);
+        blooms.splice(i, 1);
+      }
+    }
+  }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+
+  // ---------- guestbook ----------
+  const REPO = 'ellienguyen215/ellienguyen215.github.io';
+  const nameEl = document.getElementById('gbName'), msgEl = document.getElementById('gbMsg');
+  const pvFrom = document.getElementById('pvFrom'), pvMsg = document.getElementById('pvMsg');
+  const signBtn = document.getElementById('gbSign'), countEl = document.getElementById('gbCount');
+  const muteBtn = document.getElementById('gbMute'), thanks = document.getElementById('gbThanks');
+  let gbMuted = false;
+  try { gbMuted = localStorage.getItem('gb-muted') === '1'; } catch (e) {}
+  muteBtn.textContent = gbMuted ? '🔈' : '🔊';
+  muteBtn.addEventListener('click', () => { gbMuted = !gbMuted; muteBtn.textContent = gbMuted ? '🔈' : '🔊'; try { localStorage.setItem('gb-muted', gbMuted ? '1' : '0'); } catch (e) {} });
+
+  // soft, bubbly typing sounds (made in the browser, no files)
+  let actx = null;
+  function gbSound(kind) {
+    if (gbMuted) return;
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    if (actx.state !== 'running') actx.resume().catch(() => {});
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    const P = { key: [rnd(900, 1300), 0.06, 0.05, 1.35], space: [520, 0.06, 0.07, 0.9], back: [700, 0.05, 0.06, 0.6],
+                enter: [660, 0.07, 0.12, 1.5], bloom: [rnd(700, 1000), 0.06, 0.35, 1.6], sign: [784, 0.08, 0.5, 1.5] }[kind] || [900, 0.05, 0.05, 1.3];
+    o.type = kind === 'bloom' || kind === 'sign' ? 'sine' : 'triangle';
+    o.frequency.setValueAtTime(P[0], t); o.frequency.exponentialRampToValueAtTime(P[0] * P[3], t + P[2]);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(P[1], t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + P[2]);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + P[2] + 0.03);
+    if (kind === 'sign') setTimeout(() => gbSound('bloom'), 160);
+  }
+  // a tiny petal or heart floats up from where you're typing
+  function floaty(el) {
+    const r = el.getBoundingClientRect(), f = document.createElement('span');
+    f.className = 'floaty'; f.textContent = ['✿', '♡', '❀', '*', '♥'][Math.random() * 5 | 0];
+    f.style.left = (r.left + 20 + Math.random() * (r.width - 40)) + 'px'; f.style.top = (r.top + 6) + 'px';
+    f.style.setProperty('--dx', (Math.random() * 40 - 20) + 'px'); f.style.setProperty('--rot', (Math.random() * 80 - 40) + 'deg');
+    document.querySelector('.gb').appendChild(f); setTimeout(() => f.remove(), 1000);
+    el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 60);
+  }
+  function onKey(e) {
+    if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') {
+      gbSound(e.key === ' ' ? 'space' : e.key === 'Backspace' ? 'back' : e.key === 'Enter' ? 'enter' : 'key');
+      if (e.key.length === 1 && e.key !== ' ') floaty(e.target);
+    }
+  }
+  nameEl.addEventListener('keydown', onKey); msgEl.addEventListener('keydown', onKey);
+
+  // live preview: each new letter pops in
+  let shown = '';
+  function renderPreview() {
+    const name = nameEl.value.trim(), msg = msgEl.value;
+    pvFrom.innerHTML = '';
+    pvFrom.append('from: ');
+    const nm = document.createElement('span');
+    if (name) nm.textContent = name; else { nm.textContent = 'someone nice'; nm.className = 'placeholder'; }
+    pvFrom.append(nm);
+    if (!msg) { pvMsg.innerHTML = '<span class="placeholder">your note will appear here as you type…</span>'; shown = ''; }
+    else {
+      // keep the letters that were already there; animate only the new ones
+      let same = 0; while (same < shown.length && same < msg.length && shown[same] === msg[same]) same++;
+      const spans = [...pvMsg.querySelectorAll('span.l')];
+      if (pvMsg.querySelector('.placeholder')) pvMsg.innerHTML = '';
+      spans.slice(same).forEach(s => s.remove());
+      const caretOld = pvMsg.querySelector('.caret'); if (caretOld) caretOld.remove();
+      for (let i = same; i < msg.length; i++) {
+        const s = document.createElement('span'); s.className = 'l';
+        s.textContent = msg[i] === '\n' ? '\n' : msg[i];
+        if (msg[i] === '\n') { s.style.display = 'block'; s.style.height = '0'; }
+        pvMsg.appendChild(s);
+      }
+      const caret = document.createElement('i'); caret.className = 'caret'; pvMsg.appendChild(caret);
+      shown = msg;
+    }
+    countEl.textContent = `${msg.length}/280`;
+    signBtn.disabled = !(name && msg.trim());
+  }
+  nameEl.addEventListener('input', renderPreview); msgEl.addEventListener('input', renderPreview);
+
+  document.getElementById('gbForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = nameEl.value.trim(), msg = msgEl.value.trim();
+    if (!name || !msg) return;
+    const url = `https://github.com/${REPO}/issues/new?` + new URLSearchParams({
+      title: `Guestbook: ${name}`,
+      body: `${msg}\n\n— ${name}\n\n<!-- left from the guestbook on ellienguyen215.github.io -->`,
+      labels: 'guestbook',
+    });
+    gbSound('sign');
+    window.open(url, '_blank', 'noopener');
+    thanks.classList.add('show');
+  });
+
+  // show approved notes
+  async function loadWall() {
+    const wall = document.getElementById('gbWall');
+    try {
+      const r = await fetch(`https://api.github.com/repos/${REPO}/issues?labels=approved&state=all&per_page=60`, { headers: { Accept: 'application/vnd.github+json' } });
+      if (!r.ok) throw new Error(r.status);
+      const items = (await r.json()).filter(i => !i.pull_request);
+      wall.innerHTML = '';
+      if (!items.length) { wall.innerHTML = '<div class="empty">no notes yet… be the first! ✿</div>'; return; }
+      items.forEach((it, k) => {
+        const name = it.title.replace(/^guestbook:\s*/i, '').trim() || it.user.login;
+        const msg = (it.body || '').replace(/<!--[\s\S]*?-->/g, '').replace(/\n+—\s.*$/s, '').trim();
+        const d = new Date(it.created_at);
+        const el = document.createElement('div'); el.className = 'entry'; el.style.animationDelay = (k * 0.06) + 's';
+        const m = document.createElement('div'); m.className = 'm'; m.textContent = msg;
+        const w = document.createElement('div'); w.className = 'w';
+        w.textContent = `— ${name} · ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+        el.append(m, w); wall.appendChild(el);
+      });
+    } catch (e) {
+      wall.innerHTML = '<div class="empty">couldn\'t load notes right now… try again in a bit ✿</div>';
+    }
+  }
+  loadWall();
+
   function frame(t) {
     drawSky(t);
+    drawBranch(t);
+    drawBlooms();
     for (const sc of scenes) {
       if (!visible.has(sc.cv) && t > 100) continue;
       if (sc.kind === 'pond') drawPond(sc, t);
