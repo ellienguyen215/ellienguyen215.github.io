@@ -119,10 +119,10 @@
   .hobby.hide { animation: bloomOut .25s ease-in both; }
   .hobby canvas.petals { position: absolute; inset: 0; width: 100%; height: 100%; }
   .hobby .txt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font: 700 17px/1.12 'Gaegu', ui-monospace, monospace; color: var(--pop-ink, #6b3247); text-align: center; pointer-events: auto; }
+    font: 700 17px/1.12 'Gaegu', ui-monospace, monospace; color: var(--pop-ink, #6b3247); text-align: center; pointer-events: none; }
   .hobby .txt .h { font-size: 19px; color: var(--pop-head, #c9567f); margin-bottom: 3px; }
-  .hobby .x { position: absolute; top: 52px; right: 58px; pointer-events: auto; border: 0; background: rgba(255, 255, 255, .7);
-    width: 26px; height: 26px; border-radius: 50%; color: #c9567f; font-size: 13px; cursor: pointer; }
+  .hobby .x { position: absolute; z-index: 2; top: 48px; right: 54px; pointer-events: auto; border: 0; background: rgba(255, 255, 255, .85);
+    width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 2px 8px rgba(120, 60, 90, .2); color: #c9567f; font-size: 13px; cursor: pointer; }
   @keyframes bloomIn { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
   @keyframes bloomOut { to { transform: scale(.2) rotate(60deg); opacity: 0; } }
   @keyframes spinSlow { to { transform: rotate(360deg); } }
@@ -526,14 +526,10 @@
 
   // ---------- click to bloom ----------
   const blooms = [];
-  addEventListener('click', e => {
-    if (e.target.closest('.hobby')) return;
-    if (!hobby.hidden) { closeHobby(); return; }
-    if (e.target.closest('a, button, input, textarea, .card, form, .note, .wall, .insta, .corner-ctl')) return;
-
-    blooms.push({ x: e.clientX, y: e.clientY, t: 0, col: PINKS[Math.random() * PINKS.length | 0], rot: Math.random() * 6 });
+  function bloomAt(x, y) {
+    blooms.push({ x, y, t: 0, col: PINKS[Math.random() * PINKS.length | 0], rot: Math.random() * 6 });
     gbSound('bloom');
-  });
+  }
   function drawBlooms() {
     for (let i = blooms.length - 1; i >= 0; i--) {
       const b = blooms[i]; b.t++;
@@ -809,14 +805,37 @@
     setTimeout(() => { hobby.hidden = true; }, 240);
   }
   hobby.querySelector('.x').addEventListener('click', e => { e.stopPropagation(); closeHobby(); });
-  addEventListener('click', e => {
-    if (e.target.closest && e.target.closest('.hobby, .corner-ctl')) return;
+  // taps work the same with a mouse or a finger (phones don't send "click" when you tap a plain background)
+  let tapStart = null, swallowClick = false, swallowTimer = null;
+  function swallowNextClick() { swallowClick = true; clearTimeout(swallowTimer); swallowTimer = setTimeout(() => { swallowClick = false; }, 450); }
+  addEventListener('pointerdown', e => {
+    tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+    // tapping anywhere outside the open flower closes it
+    if (!hobby.hidden) {
+      if (e.target.closest && e.target.closest('.hobby .x')) return;
+      // only the round flower itself counts as "inside" — tapping anywhere else closes it
+      const r = hobby.getBoundingClientRect(), inside = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) < r.width * 0.42;
+      if (!inside) { closeHobby(); swallowNextClick(); tapStart = null; }
+      else tapStart = null;
+    }
+  }, true);
+  addEventListener('pointerup', e => {
+    if (!tapStart) return;
+    const moved = Math.hypot(e.clientX - tapStart.x, e.clientY - tapStart.y), quick = performance.now() - tapStart.t < 700;
+    tapStart = null;
+    if (moved > 12 || !quick) return;
+    const tgt = e.target;
+    if (!hobby.hidden || (tgt.closest && tgt.closest('.hobby, .corner-ctl'))) return;
     for (const b of bigs) {
       if (b === openedBig) continue;
       const p = bigPos(b, lastT);
-      if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < b.R * 0.95) { e.preventDefault(); e.stopPropagation(); openHobby(p.x, p.y, b); return; }
+      if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < b.R * 1.05) { openHobby(p.x, p.y, b); swallowNextClick(); return; }
     }
+    if (tgt.closest && tgt.closest('a, button, input, textarea, .card, form, .note, .wall, .insta')) return;
+    bloomAt(e.clientX, e.clientY);
   }, true);
+  // don't let the same tap also open a card link underneath
+  addEventListener('click', e => { if (swallowClick) { swallowClick = false; e.preventDefault(); e.stopPropagation(); } }, true);
 
   // ---------- hidden surprises ----------
   const secretEl = document.getElementById('secret');
