@@ -6,10 +6,11 @@
 <title>ascii corner</title>
 <meta name="description" content="Little living scenes made entirely of text characters.">
 <style>
-  :root { --bg: #070a10; --ink: #e9e4da; --dim: #8b8f9c; --line: rgba(233, 228, 218, .12); }
+  :root { --bg: #0d0a12; --ink: #e9e4da; --dim: #8b8f9c; --line: rgba(233, 228, 218, .12); }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink);
     font: 14px/1.6 ui-monospace, Menlo, Consolas, "Courier New", monospace; }
+  body { background: radial-gradient(ellipse at 50% -10%, #2a1626 0%, #140d18 45%, var(--bg) 100%) fixed; }
   #sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
   main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 64px 22px 40px; }
   header { text-align: center; margin-bottom: 46px; }
@@ -86,26 +87,53 @@
   const FONT = 'ui-monospace, Menlo, Consolas, monospace';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---------- background: a quiet field of twinkling text stars ----------
+  // ---------- background: sakura petals drifting down ----------
   const sky = document.getElementById('sky'), sctx = sky.getContext('2d');
-  let stars = [];
+  const PINKS = ['#ffb7d0', '#ffcadb', '#ff9cc1', '#ffe1ec', '#f7a8c4'];
+  const TUMBLE = [',', '`', "'", '*', '~', "'"];
+  let petals = [], mouse = { x: -999, y: -999, vx: 0, vy: 0 };
+  function makePetal(top) {
+    const z = Math.random();                       // 0 = far away, 1 = close
+    return {
+      x: Math.random() * (innerWidth + 200) - 100, y: top ? -20 - Math.random() * 60 : Math.random() * innerHeight,
+      z, size: 11 + z * 13, vy: 0.35 + z * 0.9, vx: 0.25 + Math.random() * 0.4,
+      sway: Math.random() * 10, swaySp: 0.008 + Math.random() * 0.012, spin: Math.random() * 6, spinSp: 0.03 + Math.random() * 0.08,
+      flower: Math.random() < 0.32, col: PINKS[Math.random() * PINKS.length | 0], pushX: 0, pushY: 0,
+    };
+  }
   function sizeSky() {
     const dpr = devicePixelRatio || 1;
     sky.width = innerWidth * dpr; sky.height = innerHeight * dpr;
     sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    stars = Array.from({ length: Math.round(innerWidth * innerHeight / 6500) }, () => ({
-      x: Math.random() * innerWidth, y: Math.random() * innerHeight, ph: Math.random() * 10, sp: 0.3 + Math.random() }));
+    const n = Math.round(Math.min(340, innerWidth * innerHeight / 3200));
+    while (petals.length < n) petals.push(makePetal(false));
+    petals.length = n;
   }
   sizeSky(); addEventListener('resize', sizeSky);
+  addEventListener('pointermove', e => { mouse.vx = e.clientX - mouse.x; mouse.vy = e.clientY - mouse.y; mouse.x = e.clientX; mouse.y = e.clientY; });
+  addEventListener('pointerleave', () => { mouse.x = mouse.y = -999; });
   function drawSky(t) {
     sctx.clearRect(0, 0, innerWidth, innerHeight);
-    sctx.font = `12px ${FONT}`;
-    for (const s of stars) {
-      const tw = Math.sin(t * 0.0012 * s.sp + s.ph);
-      if (tw < 0) continue;
-      sctx.fillStyle = tw > 0.85 ? 'rgba(232,236,255,.75)' : 'rgba(150,160,200,.35)';
-      sctx.fillText(tw > 0.85 ? '+' : '.', s.x, s.y);
+    petals.sort((a, b) => a.z - b.z);
+    for (const p of petals) {
+      // the breeze, a gentle sway, and petals swirling away from your mouse
+      const dx = p.x - mouse.x, dy = p.y - mouse.y, d = Math.hypot(dx, dy);
+      if (d < 90 && d > 0.1) {
+        const f = (1 - d / 90) * 0.6;
+        p.pushX += dx / d * f + mouse.vx * 0.02 * f; p.pushY += dy / d * f + mouse.vy * 0.02 * f;
+      }
+      p.pushX *= 0.94; p.pushY *= 0.94;
+      p.sway += p.swaySp; p.spin += p.spinSp * (1 + Math.abs(p.pushX) * 0.3);
+      p.x += p.vx + Math.sin(p.sway) * 0.6 + p.pushX;
+      p.y += p.vy + Math.cos(p.sway * 0.7) * 0.15 + p.pushY;
+      if (p.y > innerHeight + 20 || p.x > innerWidth + 120 || p.x < -140) Object.assign(p, makePetal(true));
+      const c = p.flower ? ['✿', '❀', '✿', '*'][Math.floor(p.spin * 0.5) % 4] : TUMBLE[Math.floor(p.spin) % TUMBLE.length];
+      sctx.font = `${p.size}px ui-monospace, Menlo, Consolas, monospace`;
+      sctx.globalAlpha = 0.4 + p.z * 0.6;
+      sctx.fillStyle = p.col;
+      sctx.fillText(c, p.x, p.y);
     }
+    sctx.globalAlpha = 1;
   }
 
   // ---------- tiny previews on each card ----------
