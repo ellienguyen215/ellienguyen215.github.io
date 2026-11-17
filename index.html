@@ -131,6 +131,31 @@
     box-shadow: 0 6px 20px rgba(160, 70, 100, .3); transition: opacity .4s, transform .4s; }
   .secret.show { opacity: 1; transform: translate(-50%, 0); }
 
+  /* ---------- corner controls ---------- */
+  .corner-ctl { position: fixed; right: 16px; bottom: 16px; z-index: 25; display: flex; align-items: center; gap: 8px; }
+  .ctl { font: 700 18px 'Gaegu', ui-monospace, monospace; color: #c9567f; background: rgba(255, 248, 251, .85);
+    border: 1px dashed rgba(201, 86, 127, .45); border-radius: 20px; padding: 3px 14px 5px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    box-shadow: 0 4px 14px rgba(120, 90, 70, .12); transition: transform .15s; }
+  .ctl:hover { transform: translateY(-2px); }
+  .ctl.round { width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 50%; }
+  .ctl.on .ic { animation: bob 1s ease-in-out infinite; display: inline-block; }
+  @keyframes bob { 50% { transform: translateY(-3px) rotate(8deg); } }
+  .vol { width: 80px; accent-color: #d8638b; }
+  .vol[hidden] { display: none; }
+
+  /* ---------- dusk & night ---------- */
+  html[data-time="dusk"] body { background: radial-gradient(ellipse at 50% -10%, #fde3cf 0%, #f6d2c6 45%, #ecc4c4 100%) fixed; }
+  html[data-time="night"] { --bg: #120d18; --ink: #f1e7ea; --dim: #a898a6; --line: rgba(241, 231, 234, .14); }
+  html[data-time="night"] body { background: radial-gradient(ellipse at 50% -10%, #34192f 0%, #1a1020 45%, #0f0a14 100%) fixed; }
+  html[data-time="night"] a.card, html[data-time="night"] div.card, html[data-time="night"] .gb form, html[data-time="night"] .note, html[data-time="night"] .wall .entry {
+    background: rgba(32, 22, 38, .86) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, .35); }
+  html[data-time="night"] .gb input, html[data-time="night"] .gb textarea { background: #24182b; color: var(--ink); }
+  html[data-time="night"] .note .msg, html[data-time="night"] .wall .entry .m { color: #f6e4ea; }
+  html[data-time="night"] h1.cute { text-shadow: 0 3px 0 #2a1626, 0 -2px 0 #2a1626, 2px 0 0 #2a1626, -2px 0 0 #2a1626, 0 0 22px rgba(255, 150, 190, .45); }
+  html[data-time="night"] .insta, html[data-time="night"] .ctl { background: rgba(50, 26, 44, .8); color: #ff9cc1; }
+  html[data-time="night"] .tag b { color: #fff; }
+  body, a.card, .gb form, .note, .wall .entry { transition: background .8s ease, color .8s ease; }
+
   footer { text-align: center; color: var(--dim); margin-top: 54px; font-size: 12px; }
   footer a { color: var(--dim); }
 </style>
@@ -149,6 +174,11 @@
   </div>
 </div>
 <div id="secret" class="secret"></div>
+<div class="corner-ctl">
+  <button id="lofiBtn" class="ctl" title="lofi music"><span class="ic">♪</span><span class="lbl">play lofi</span></button>
+  <input id="lofiVol" class="vol" type="range" min="0" max="1" step="0.05" value="0.6" aria-label="music volume" hidden>
+  <button id="timeBtn" class="ctl round" title="day / night"><span class="ic">☾</span></button>
+</div>
 <main>
   <header>
     <h1 class="cute" aria-label="Welcome to my corner">
@@ -387,7 +417,8 @@
   // coming soon: a slow sparkle
   function drawSoon(sc, t) {
     const { ctx } = sc;
-    ctx.fillStyle = '#efe4d2'; ctx.fillRect(0, 0, sc.w, sc.h);
+    const night = document.documentElement.dataset.time === 'night';
+    ctx.fillStyle = night ? '#1d1424' : '#efe4d2'; ctx.fillRect(0, 0, sc.w, sc.h);
     const cx = sc.w / 2, cy = sc.h / 2;
     for (let i = 0; i < 26; i++) {
       const a = i / 26 * Math.PI * 2 + t * 0.0003, r = 40 + 26 * Math.sin(t * 0.001 + i * 1.7);
@@ -477,7 +508,7 @@
   addEventListener('click', e => {
     if (e.target.closest('.hobby')) return;
     if (!hobby.hidden) { closeHobby(); return; }
-    if (e.target.closest('a, button, input, textarea, .card, form, .note, .wall, .insta')) return;
+    if (e.target.closest('a, button, input, textarea, .card, form, .note, .wall, .insta, .corner-ctl')) return;
 
     blooms.push({ x: e.clientX, y: e.clientY, t: 0, col: PINKS[Math.random() * PINKS.length | 0], rot: Math.random() * 6 });
     gbSound('bloom');
@@ -740,7 +771,7 @@
   }
   hobby.querySelector('.x').addEventListener('click', e => { e.stopPropagation(); closeHobby(); });
   addEventListener('click', e => {
-    if (e.target.closest && e.target.closest('.hobby')) return;
+    if (e.target.closest && e.target.closest('.hobby, .corner-ctl')) return;
     for (const b of bigs) {
       if (b === openedBig) continue;
       const p = bigPos(b, lastT);
@@ -875,6 +906,146 @@
     for (const [gx, gy, c, , col] of cells.values()) { sctx.fillStyle = col; sctx.fillText(c, gx * cw, gy * ch + 9); }
   }
 
+  // ---------- sakura cursor ----------
+  const trail = [];
+  let lastTrail = null;
+  addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const p = { x: e.clientX, y: e.clientY };
+    if (lastTrail) {
+      const d = Math.hypot(p.x - lastTrail.x, p.y - lastTrail.y);
+      for (let k = 0; k < Math.min(4, d / 14); k++) trail.push({
+        x: p.x + rnd(-6, 6), y: p.y + rnd(-6, 6), vx: rnd(-0.6, 0.6), vy: rnd(-0.4, 0.6), life: 0, max: rnd(40, 70),
+        c: ['✿', '❀', '*', ',', "'"][Math.random() * 5 | 0], col: PINKS[Math.random() * PINKS.length | 0], size: rnd(10, 16), spin: Math.random() * 6 });
+    }
+    lastTrail = p;
+  });
+  function drawTrail() {
+    for (let i = trail.length - 1; i >= 0; i--) {
+      const p = trail[i]; p.life++; p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.spin += 0.1;
+      if (p.life > p.max) { trail.splice(i, 1); continue; }
+      const a = 1 - p.life / p.max;
+      tctx.globalAlpha = a; tctx.fillStyle = p.col;
+      tctx.font = `${p.size * (0.6 + 0.4 * a)}px ui-monospace, Menlo, Consolas, monospace`;
+      tctx.fillText(p.c === ',' || p.c === "'" ? [',', "'", '`'][Math.floor(p.spin) % 3] : p.c, p.x, p.y);
+    }
+    tctx.globalAlpha = 1;
+    if (trail.length > 160) trail.splice(0, trail.length - 160);
+  }
+
+  // ---------- day & night (follows your real clock) ----------
+  const timeBtn = document.getElementById('timeBtn');
+  let timeMode = 'auto';
+  try { timeMode = localStorage.getItem('corner-time') || 'auto'; } catch (e) {}
+  function timeOfDay() {
+    if (timeMode !== 'auto') return timeMode;
+    const d = new Date(), h = d.getHours() + d.getMinutes() / 60;
+    if (h >= 8 && h < 17.5) return 'day';
+    if ((h >= 6 && h < 8) || (h >= 17.5 && h < 19.5)) return 'dusk';
+    return 'night';
+  }
+  function applyTime() {
+    const t = timeOfDay();
+    document.documentElement.dataset.time = t;
+    timeBtn.querySelector('.ic').textContent = timeMode === 'auto' ? (t === 'night' ? '☾' : t === 'dusk' ? '◐' : '☀') : timeMode === 'night' ? '☾' : '☀';
+    timeBtn.title = timeMode === 'auto' ? `following your clock (${t}) – click to switch` : `${timeMode} – click to switch`;
+  }
+  timeBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    timeMode = timeMode === 'auto' ? (timeOfDay() === 'night' ? 'day' : 'night') : timeMode === 'day' ? 'night' : 'auto';
+    try { localStorage.setItem('corner-time', timeMode); } catch (e2) {}
+    applyTime();
+    secret(timeMode === 'auto' ? 'following your clock' : timeMode === 'night' ? 'good night' : 'good morning');
+  });
+  applyTime(); setInterval(applyTime, 60000);
+  // fireflies come out at night
+  const flies = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random(), a: Math.random() * 7, ph: Math.random() * 10 }));
+  function drawFireflies(t) {
+    if (document.documentElement.dataset.time !== 'night') return;
+    for (const f of flies) {
+      f.a += rnd(-0.2, 0.2); f.x += Math.cos(f.a) * 0.0005; f.y += Math.sin(f.a) * 0.0004;
+      f.x = (f.x + 1) % 1; f.y = (f.y + 1) % 1;
+      const g = Math.sin(t * 0.0022 + f.ph) * 0.5 + 0.5;
+      if (g < 0.3) continue;
+      sctx.globalAlpha = g; sctx.fillStyle = g > 0.8 ? '#eaff8a' : '#b9d65c';
+      sctx.font = '13px ui-monospace, Menlo, Consolas, monospace';
+      sctx.fillText(g > 0.8 ? '*' : '+', f.x * innerWidth, f.y * innerHeight);
+    }
+    sctx.globalAlpha = 1;
+  }
+
+  // ---------- lofi music (all made in the browser) ----------
+  const lofiBtn = document.getElementById('lofiBtn'), lofiVol = document.getElementById('lofiVol');
+  let lofi = null;
+  function startLofi() {
+    let ac;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    const master = ac.createGain(); master.gain.value = 0;
+    const warm = ac.createBiquadFilter(); warm.type = 'lowpass'; warm.frequency.value = 2600; warm.Q.value = 0.3;
+    master.connect(warm).connect(ac.destination);
+    master.gain.setTargetAtTime(+lofiVol.value * 1.0, ac.currentTime, 0.8);
+    const noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), nd = noise.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    // vinyl crackle
+    const crackleBuf = ac.createBuffer(1, ac.sampleRate * 4, ac.sampleRate), cd = crackleBuf.getChannelData(0);
+    for (let i = 0; i < cd.length; i++) cd[i] = Math.random() < 0.0009 ? (Math.random() * 2 - 1) * 0.9 : (Math.random() * 2 - 1) * 0.012;
+    const crackle = ac.createBufferSource(); crackle.buffer = crackleBuf; crackle.loop = true;
+    const cg = ac.createGain(); cg.gain.value = 0.35; crackle.connect(cg).connect(master); crackle.start();
+
+    const BPM = 74, beat = 60 / BPM, swing = beat * 0.16;
+    // jazzy chords: Fmaj7 – Em7 – Dm7 – Cmaj7(9)
+    const CH = [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59, 62]];
+    const MEL = [72, 74, 76, 79, 81, 79, 76, 74, 72, 69];
+    const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+    function keys(m, t, len, vol) {          // soft electric-piano tone
+      const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+      o.type = 'sine'; o2.type = 'triangle'; o.frequency.value = hz(m); o2.frequency.value = hz(m) * 2.001; o2.detune.value = 6;
+      const g2 = ac.createGain(); g2.gain.value = 0.12;
+      f.type = 'lowpass'; f.frequency.setValueAtTime(1800, t); f.frequency.exponentialRampToValueAtTime(600, t + len);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(g); o2.connect(g2).connect(g); g.connect(f).connect(master);
+      o.start(t); o2.start(t); o.stop(t + len + 0.05); o2.stop(t + len + 0.05);
+    }
+    function kick(t) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
+      g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35); o.connect(g).connect(master); o.start(t); o.stop(t + 0.4); }
+    function hit(t, freq, vol, len, q = 0.8) { const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      s.buffer = noise; f.type = freq > 5000 ? 'highpass' : 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len); s.connect(f).connect(g).connect(master); s.start(t, Math.random()); s.stop(t + len + 0.02); }
+    function bass(m, t, len) { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = hz(m - 12);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.32, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + len); o.connect(g).connect(master); o.start(t); o.stop(t + len + 0.05); }
+
+    let next = ac.currentTime + 0.15, step = 0;   // 8 eighth-notes per bar
+    function schedule() {
+      while (next < ac.currentTime + 0.5) {
+        const bar = Math.floor(step / 8) % CH.length, e = step % 8, t = next + (e % 2 ? swing : 0);
+        const chord = CH[bar];
+        if (e === 0) { chord.forEach((m, i) => keys(m, t + i * 0.012, beat * 3.6, 0.075)); bass(chord[0], t, beat * 1.8); }
+        if (e === 5) chord.slice(1).forEach((m, i) => keys(m + (i === 2 ? 12 : 0), t + i * 0.01, beat * 1.6, 0.04));
+        if (e === 4) bass(chord[0] + 7, t, beat);
+        if (e === 0 || e === 5) kick(t);
+        if (e === 2 || e === 6) hit(t, 1800, 0.22, 0.18, 0.6);            // snare
+        hit(t, 8000, e % 2 ? 0.035 : 0.06, 0.05);                         // hi-hat
+        if (Math.random() < 0.28 && e % 2 === 0) keys(MEL[Math.random() * MEL.length | 0], t, beat * 1.4, 0.05);   // little melody notes
+        next += beat / 2; step++;
+      }
+    }
+    const timer = setInterval(schedule, 100); schedule();
+    lofi = { ac, master, timer };
+  }
+  function stopLofi() {
+    if (!lofi) return;
+    const L = lofi; lofi = null;
+    L.master.gain.setTargetAtTime(0, L.ac.currentTime, 0.4);
+    setTimeout(() => { clearInterval(L.timer); L.ac.close(); }, 1500);
+  }
+  lofiBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (lofi) { stopLofi(); lofiBtn.classList.remove('on'); lofiBtn.querySelector('.lbl').textContent = 'play lofi'; lofiVol.hidden = true; }
+    else { startLofi(); lofiBtn.classList.add('on'); lofiBtn.querySelector('.lbl').textContent = 'lofi on'; lofiVol.hidden = false; }
+  });
+  lofiVol.addEventListener('input', () => { if (lofi) lofi.master.gain.setTargetAtTime(+lofiVol.value * 1.0, lofi.ac.currentTime, 0.1); });
+  lofiVol.addEventListener('click', e => e.stopPropagation());
+
   function frame(t) {
     lastT = t;
     drawSky(t);
@@ -882,6 +1053,8 @@
     drawBigs(t);
     drawKoiSwim();
     drawHobbyFlower(t);
+    drawTrail();
+    drawFireflies(t);
     drawBlooms();
     for (const sc of scenes) {
       if (!visible.has(sc.cv) && t > 100) continue;
