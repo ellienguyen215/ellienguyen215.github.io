@@ -460,45 +460,39 @@
     ctx.globalAlpha = 1;
   }
 
-  // zen garden preview: a rake slowly drawing rings around a rock, with a few leaves
+  // zen garden preview: the garden seen from the front, with lines being raked into the sand
   function drawZen(sc, t) {
-    const { ctx, cw, ch, cols, rows } = sc;
-    ctx.fillStyle = '#e8d8b8'; ctx.fillRect(0, 0, sc.w, sc.h);
-    const cx = sc.w * 0.42, cy = sc.h * 0.52, p = (t * 0.00012) % 1;
-    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-      const px = x * cw, py = y * ch, dx = (px - cx) / 1.6, dy = py - cy, d = Math.hypot(dx, dy);
-      const ang = (Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2);
-      if (d < 26) continue;
-      const ring = Math.floor((d - 26) / 11);
-      if (ring < 5 && ang < p * 1.15 + ring * 0.0) {
-        const a = Math.atan2(dy, dx), A = ((a + Math.PI / 2) % Math.PI + Math.PI) % Math.PI;
-        const c = A < Math.PI / 8 || A > Math.PI * 7 / 8 ? '-' : A > Math.PI * 3 / 8 && A < Math.PI * 5 / 8 ? '|' : A < Math.PI / 2 ? '\\' : '/';
-        ctx.fillStyle = ring % 2 ? '#fff8ea' : '#a88d62'; ctx.fillText(c, px, py);
-      } else if (ring >= 5 || ang >= p * 1.15) {
-        if (y % 2 === 0) { ctx.fillStyle = (x + y) % 2 ? '#fff8ea' : '#a88d62'; ctx.fillText('-', px, py); }
-      }
+    const { ctx, cw, ch } = sc, W = sc.w, H = sc.h;
+    const sky = ctx.createLinearGradient(0, 0, 0, H * 0.4); sky.addColorStop(0, '#9cc4e4'); sky.addColorStop(1, '#eef3f4');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#a9bacb';
+    for (const [x, w, h] of [[0.2, 0.5, 0.22], [0.62, 0.6, 0.18], [0.95, 0.4, 0.14]]) { ctx.beginPath(); ctx.moveTo((x - w / 2) * W, H * 0.36); ctx.quadraticCurveTo(x * W, H * (0.36 - h * 2), (x + w / 2) * W, H * 0.36); ctx.fill(); }
+    ctx.fillStyle = '#e9dcc4'; ctx.fillRect(0, H * 0.33, W, H * 0.07);
+    ctx.fillStyle = '#5e5a66'; for (let x = 0; x < W; x += cw) ctx.fillText((x / cw | 0) % 2 ? '_' : '/', x, H * 0.29);
+    ctx.fillStyle = '#6f8a4e'; ctx.fillRect(0, H * 0.4, W, H * 0.6);
+    // sand in perspective
+    const yH = H * 0.2, yB = H, Z = 3, cx = W / 2, WN = W * 1.1;
+    const P = (X, z) => [cx + X / z, yH + (yB - yH) / z];
+    const [blx, bly] = P(-WN / 2, Z), [brx] = P(WN / 2, Z), [flx, fly] = P(-WN / 2, 1), [frx] = P(WN / 2, 1);
+    ctx.fillStyle = '#e6d5b3'; ctx.beginPath(); ctx.moveTo(blx, bly); ctx.lineTo(brx, bly); ctx.lineTo(frx, fly); ctx.lineTo(flx, fly); ctx.fill();
+    // raked lines appearing from the back to the front
+    const prog = (t * 0.00008) % 1.2;
+    for (let k = 0; k < 26; k++) {
+      const z = Z - k / 26 * (Z - 1); if (k / 26 > prog) break;
+      const [, y] = P(0, z), [x0] = P(-WN / 2 + 6 * z, z), [x1] = P(WN / 2 - 6 * z, z);
+      ctx.fillStyle = k % 2 ? '#fff8ea' : '#a88d62';
+      for (let x = x0; x < x1; x += cw) ctx.fillText(z > 2 ? '-' : '~', x, y - 6);
     }
-    // the rock
-    for (let y = -2; y <= 2; y++) for (let x = -4; x <= 4; x++) {
-      const d = Math.hypot(x / 4, y / 2.2); if (d > 1) continue;
-      ctx.fillStyle = d > 0.8 ? '#6d6a66' : (x + y < 0 ? '#c9c4bb' : '#9a958c'); ctx.fillText(d > 0.8 ? 'o' : x + y < 0 ? '@' : '%', cx + x * cw, cy + y * ch - 4);
-    }
-    // a little maple
-    const mx = sc.w * 0.82, my = sc.h * 0.3;
-    for (let y = -3; y <= 3; y++) for (let x = -5; x <= 5; x++) {
-      const d = Math.hypot(x / 5, y / 3); if (d > 1) continue;
-      ctx.fillStyle = ['#a93a22', '#d4532b', '#ea7b32', '#f3a845'][(x * 7 + y * 3 + 20) % 4]; ctx.fillText('&%@*'[(x + y + 8) % 4], mx + x * cw, my + y * ch);
-    }
-    // leaves drifting about
-    for (let k = 0; k < 7; k++) {
-      const lx = ((k * 97 + t * 0.006 * (k % 3 + 1)) % (sc.w + 40)) - 20, ly = (k * 53) % sc.h;
-      ctx.fillStyle = ['#d9542b', '#e8862e', '#e9b23a'][k % 3]; ctx.fillText('&%*'[k % 3], lx, ly);
-    }
-    // the rake going round
-    const ra = p * 1.15 * Math.PI * 2 - Math.PI, rr = 26 + 27;
-    const rx = cx + Math.cos(ra) * rr * 1.6, ry = cy + Math.sin(ra) * rr;
-    ctx.fillStyle = '#7a5232';
-    for (let k = -2; k <= 2; k++) ctx.fillText(k % 2 ? '-' : 'H', rx + Math.cos(ra) * k * 9 * 1.6, ry + Math.sin(ra) * k * 9);
+    // a rock and a little maple
+    const [rx, ry] = P(-WN * 0.12, 1.7), rw = 34, rh = 22;
+    for (let y = 0; y < rh; y += ch) for (let x = -rw; x <= rw; x += cw) { const u = x / rw, v = y / rh; if (v > Math.sqrt(1 - u * u)) continue;
+      ctx.fillStyle = -u * 0.5 + v > 0.5 ? '#d2ccc2' : '#8f8a82'; ctx.fillText(v > 0.8 ? '"' : '%', rx + x, ry - y - 10); }
+    const [mx, my] = P(WN * 0.18, 2.1);
+    ctx.fillStyle = '#5a3a26'; for (let k = 0; k < 3; k++) ctx.fillText('|', mx, my - 10 - k * ch);
+    for (let y = -2; y <= 2; y++) for (let x = -5; x <= 5; x++) { if (Math.hypot(x / 5, y / 2.5) > 1) continue;
+      ctx.fillStyle = ['#9e3420', '#c94a28', '#e2702f', '#f0a040'][(x * 7 + y * 3 + 30) % 4]; ctx.fillText('&%@*'[(x + y + 8) % 4], mx + x * cw, my - 10 - 3 * ch - 16 + y * ch); }
+    // a leaf drifting down
+    const lp = (t * 0.0003) % 1; ctx.fillStyle = '#e8862e'; ctx.fillText('&', mx + Math.sin(lp * 9) * 12 + 20, my - 60 + lp * 60);
   }
 
   // only animate what's on screen
