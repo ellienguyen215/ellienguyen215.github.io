@@ -219,6 +219,14 @@
         <div class="chips"><span>wipe the fog</span><span>sleepy cat</span><span>thunderstorm</span><span>lofi</span></div>
       </div>
     </a>
+    <a class="card" href="https://ellienguyen215.github.io/ascii-zen-garden/">
+      <canvas data-scene="zen" aria-hidden="true"></canvas>
+      <div class="body">
+        <h2>zen garden <span class="arrow">→</span></h2>
+        <p>A calm sand garden. Rake the fallen leaves away, then draw slow, swirling patterns around the rocks and little maple trees.</p>
+        <div class="chips"><span>rake leaves</span><span>draw patterns</span><span>saves your garden</span><span>sound</span></div>
+      </div>
+    </a>
   </section>
 
   <section class="gb" id="guestbook">
@@ -450,6 +458,47 @@
     for (let k = 0; k < 8; k++) { const lx = x0 + (k + 0.5) / 8 * (x1 - x0), tw = 0.6 + 0.4 * Math.sin(t * 0.002 + k);
       ctx.fillStyle = ['#ffcf6e', '#ff9e7a', '#ffb3cf', '#a9e3ff'][k % 4]; ctx.globalAlpha = tw; ctx.fillText('o', lx, y0 - 14 + Math.sin(k / 7 * Math.PI) * 4); }
     ctx.globalAlpha = 1;
+  }
+
+  // zen garden preview: a rake slowly drawing rings around a rock, with a few leaves
+  function drawZen(sc, t) {
+    const { ctx, cw, ch, cols, rows } = sc;
+    ctx.fillStyle = '#e8d8b8'; ctx.fillRect(0, 0, sc.w, sc.h);
+    const cx = sc.w * 0.42, cy = sc.h * 0.52, p = (t * 0.00012) % 1;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const px = x * cw, py = y * ch, dx = (px - cx) / 1.6, dy = py - cy, d = Math.hypot(dx, dy);
+      const ang = (Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2);
+      if (d < 26) continue;
+      const ring = Math.floor((d - 26) / 11);
+      if (ring < 5 && ang < p * 1.15 + ring * 0.0) {
+        const a = Math.atan2(dy, dx), A = ((a + Math.PI / 2) % Math.PI + Math.PI) % Math.PI;
+        const c = A < Math.PI / 8 || A > Math.PI * 7 / 8 ? '-' : A > Math.PI * 3 / 8 && A < Math.PI * 5 / 8 ? '|' : A < Math.PI / 2 ? '\\' : '/';
+        ctx.fillStyle = ring % 2 ? '#fff8ea' : '#a88d62'; ctx.fillText(c, px, py);
+      } else if (ring >= 5 || ang >= p * 1.15) {
+        if (y % 2 === 0) { ctx.fillStyle = (x + y) % 2 ? '#fff8ea' : '#a88d62'; ctx.fillText('-', px, py); }
+      }
+    }
+    // the rock
+    for (let y = -2; y <= 2; y++) for (let x = -4; x <= 4; x++) {
+      const d = Math.hypot(x / 4, y / 2.2); if (d > 1) continue;
+      ctx.fillStyle = d > 0.8 ? '#6d6a66' : (x + y < 0 ? '#c9c4bb' : '#9a958c'); ctx.fillText(d > 0.8 ? 'o' : x + y < 0 ? '@' : '%', cx + x * cw, cy + y * ch - 4);
+    }
+    // a little maple
+    const mx = sc.w * 0.82, my = sc.h * 0.3;
+    for (let y = -3; y <= 3; y++) for (let x = -5; x <= 5; x++) {
+      const d = Math.hypot(x / 5, y / 3); if (d > 1) continue;
+      ctx.fillStyle = ['#a93a22', '#d4532b', '#ea7b32', '#f3a845'][(x * 7 + y * 3 + 20) % 4]; ctx.fillText('&%@*'[(x + y + 8) % 4], mx + x * cw, my + y * ch);
+    }
+    // leaves drifting about
+    for (let k = 0; k < 7; k++) {
+      const lx = ((k * 97 + t * 0.006 * (k % 3 + 1)) % (sc.w + 40)) - 20, ly = (k * 53) % sc.h;
+      ctx.fillStyle = ['#d9542b', '#e8862e', '#e9b23a'][k % 3]; ctx.fillText('&%*'[k % 3], lx, ly);
+    }
+    // the rake going round
+    const ra = p * 1.15 * Math.PI * 2 - Math.PI, rr = 26 + 27;
+    const rx = cx + Math.cos(ra) * rr * 1.6, ry = cy + Math.sin(ra) * rr;
+    ctx.fillStyle = '#7a5232';
+    for (let k = -2; k <= 2; k++) ctx.fillText(k % 2 ? '-' : 'H', rx + Math.cos(ra) * k * 9 * 1.6, ry + Math.sin(ra) * k * 9);
   }
 
   // only animate what's on screen
@@ -1126,6 +1175,7 @@
       if (!visible.has(sc.cv) && t > 100) continue;
       if (sc.kind === 'pond') drawPond(sc, t);
       else if (sc.kind === 'fire') drawFire(sc, t);
+      else if (sc.kind === 'zen') drawZen(sc, t);
       else drawCafe(sc, t);
     }
     if (!reduce) requestAnimationFrame(frame);

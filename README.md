@@ -5,6 +5,7 @@ Home page for little living scenes made entirely of text characters — with fal
 - [koi pond](https://ellienguyen215.github.io/ascii-koi-pond/)
 - [campfire](https://ellienguyen215.github.io/ascii-campfire/)
 - [rainy café](https://ellienguyen215.github.io/ascii-cafe/)
+- [zen garden](https://ellienguyen215.github.io/ascii-zen-garden/)
 
 Live at https://ellienguyen215.github.io
 
